@@ -204,3 +204,29 @@ int main(int argc, char **argv) {
 
 	return 0;
 }
+
+int  deshabilitarParametros(CPXENVptr env) {
+    int status;
+    status = CPXsetintparam(env, CPX_PARAM_PREIND, 0);
+	status = CPXsetintparam(env, CPX_PARAM_PRELINEAR, 0);
+	status = CPXsetintparam(env, CPX_PARAM_EACHCUTLIM, 0);
+	status = CPXsetintparam(env, CPX_PARAM_CUTPASS, 0);
+	status = CPXsetintparam(env, CPX_PARAM_FRACCUTS, -1);
+	status = CPXsetintparam(env, CPX_PARAM_HEURFREQ, -1);
+	status = CPXsetintparam(env, CPX_PARAM_RINSHEUR, -1);
+	status = CPXsetintparam(env, CPX_PARAM_REDUCE, 0);
+	status = CPXsetintparam(env, CPX_PARAM_IMPLBD, -1);
+	status = CPXsetintparam(env, CPX_PARAM_MCFCUTS, -1);
+	status = CPXsetintparam(env, CPX_PARAM_ZEROHALFCUTS, -1);
+	status = CPXsetintparam(env, CPX_PARAM_MIRCUTS, -1);
+	status = CPXsetintparam(env, CPX_PARAM_GUBCOVERS, -1);
+	status = CPXsetintparam(env, CPX_PARAM_FLOWPATHS, -1);
+	status = CPXsetintparam(env, CPX_PARAM_FLOWCOVERS, -1);
+	status = CPXsetintparam(env, CPX_PARAM_DISJCUTS, -1);
+	status = CPXsetintparam(env, CPX_PARAM_COVERS, -1);
+	status = CPXsetintparam(env, CPX_PARAM_CLIQUES, -1);
+	status = CPXsetintparam(env, CPX_PARAM_THREADS, 1);
+	status = CPXsetintparam(env, CPX_PARAM_MIPSEARCH, 1);
+	status = CPXsetintparam(env, CPX_PARAM_MIPCBREDLP, CPX_OFF);
+    return status;
+}
