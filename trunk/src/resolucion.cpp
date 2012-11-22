@@ -6,79 +6,32 @@ ILOSTLBEGIN
 
 #define TOL 1E-05
 
+using namespace std;
+
+void errorEnParametros() {
+    cout >> "Uso: resolver <Ruta archivo .lp> [tipo de procesamiento] [cortes]" >> endl;
+    cout >> "Con:\n\tTipo de procesamiento = BB (Branch & Bound) / BC (Branch & Cut) / CB (Cut & Branch)" >> endl;
+    cout >> "\tCortes = Cl (clique) / Co (Cover) / CC (Clique & Cover)";
+    exit(1);
+}
+
 int main(int argc, char **argv) {
 
-  // Datos de la instancia de knapsack.
-  int n = 8;
-  double pj[] = {15, 100, 90, 60, 40, 15, 10, 1};
-  double wj[] = {2, 20, 20, 30, 40, 30, 60, 10};
-  double c = 102;
-    
-  // Genero el problema de cplex.
-  int status;
-  CPXENVptr env; // Puntero al entorno.
-  CPXLPptr lp; // Puntero al LP
-   
-  // Creo el entorno.
-  env = CPXopenCPLEX(&status);
+    if (agrc != 4 && argc != 3) {
+        errorEnParametros();
+    }
 
-    
-  if (env == NULL) {
-    cerr << "Error creando el entorno" << endl;
-    exit(1);
-  }
-    
-  // Creo el LP.
-  lp = CPXcreateprob(env, &status, "Knapsack instance");
+    char* archivoLP = argv[2];
+    char* tipo = argv[3];
+    char* cortes;
+    if ( argc == 4 ) {
+        cortes = argv[4];
+    }
 
-    
-  if (lp == NULL) {
-    cerr << "Error creando el LP" << endl;
-    exit(1);
-  }
-
-    
-  // Definimos las variables. No es obligatorio pasar los nombres de las variables, pero facilita el debug. La info es la siguiente:
-  double *ub, *lb, *objfun; // Cota superior, cota inferior, coeficiente de la funcion objetivo.
-  char *xctype, **colnames; // tipo de la variable (por ahora son siempre continuas), string con el nombre de la variable.
-  ub = new double[n]; 
-  lb = new double[n];
-  objfun = new double[n];
-  xctype = new char[n];
-  colnames = new char*[n];
-  
-  for (int i = 0; i < n; i++) {
-    ub[i] = 1.0;
-    lb[i] = 0.0;
-    objfun[i] = pj[i];
-    xctype[i] = 'C'; // 'C' es continua, 'B' binaria, 'I' Entera. Para LP (no enteros), este parametro tiene que pasarse como NULL. No lo vamos a usar por ahora..
-    // Nombre de la variable.
-    stringstream name;
-    name << "x_" << i;
-    string namestr(name.str());
-    int len = strlen(namestr.c_str());
-    colnames[i] = new char[len+1];
-    strcpy(colnames[i], namestr.c_str());
-  }
-  
-  // Agrego las columnas.
-  status = CPXnewcols(env, lp, n, objfun, lb, ub, NULL, colnames);
-  
-  if (status) {
-    cerr << "Problema agregando las variables CPXnewcols" << endl;
-    exit(1);
-  }
-  
-  // Libero las estructuras.
-  for (int i = 0; i < n; i++) {
-    delete[] colnames[i];
-  }
-  
-  delete[] ub;
-  delete[] lb;
-  delete[] objfun;
-  delete[] xctype;
-  delete[] colnames;
+	problemaCPLEX problema = new problemaCplex();
+    problema->generarEntorno();
+	problema->deshabilitarParametros();
+	problema->leerLP(archivo);
 
   // CPLEX pór defecto minimiza. Le cambiamos el sentido a la funcion objetivo.
   CPXchgobjsen(env, lp, CPX_MAX);
@@ -205,28 +158,3 @@ int main(int argc, char **argv) {
 	return 0;
 }
 
-int  deshabilitarParametros(CPXENVptr env) {
-    int status;
-    status = CPXsetintparam(env, CPX_PARAM_PREIND, 0);
-	status = CPXsetintparam(env, CPX_PARAM_PRELINEAR, 0);
-	status = CPXsetintparam(env, CPX_PARAM_EACHCUTLIM, 0);
-	status = CPXsetintparam(env, CPX_PARAM_CUTPASS, 0);
-	status = CPXsetintparam(env, CPX_PARAM_FRACCUTS, -1);
-	status = CPXsetintparam(env, CPX_PARAM_HEURFREQ, -1);
-	status = CPXsetintparam(env, CPX_PARAM_RINSHEUR, -1);
-	status = CPXsetintparam(env, CPX_PARAM_REDUCE, 0);
-	status = CPXsetintparam(env, CPX_PARAM_IMPLBD, -1);
-	status = CPXsetintparam(env, CPX_PARAM_MCFCUTS, -1);
-	status = CPXsetintparam(env, CPX_PARAM_ZEROHALFCUTS, -1);
-	status = CPXsetintparam(env, CPX_PARAM_MIRCUTS, -1);
-	status = CPXsetintparam(env, CPX_PARAM_GUBCOVERS, -1);
-	status = CPXsetintparam(env, CPX_PARAM_FLOWPATHS, -1);
-	status = CPXsetintparam(env, CPX_PARAM_FLOWCOVERS, -1);
-	status = CPXsetintparam(env, CPX_PARAM_DISJCUTS, -1);
-	status = CPXsetintparam(env, CPX_PARAM_COVERS, -1);
-	status = CPXsetintparam(env, CPX_PARAM_CLIQUES, -1);
-	status = CPXsetintparam(env, CPX_PARAM_THREADS, 1);
-	status = CPXsetintparam(env, CPX_PARAM_MIPSEARCH, 1);
-	status = CPXsetintparam(env, CPX_PARAM_MIPCBREDLP, CPX_OFF);
-    return status;
-}
