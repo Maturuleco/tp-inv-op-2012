@@ -1,9 +1,13 @@
 #include "problemaCPLEX.hpp"
+#include <ilcplex/ilocplex.h>
+#include <ilcplex/cplex.h>
+ILOSTLBEGIN
+#include <string.h>
 
 problemaCPLEX::problemaCPLEX()
 :status(0), lp(NULL)
 {
-	env = generarEntorno();
+	generarEntorno();
 }
 
 void problemaCPLEX::deshabilitarParametros()
@@ -43,8 +47,8 @@ void problemaCPLEX::generarEntorno()
 
 void problemaCPLEX::leerLP(const char* ruta)
 {
-	char probname[16];
-	strcopy (probname, ruta); // TODO: Mejorar esto
+/*	char probname[16];
+    strcpy (probname, ruta); // TODO: Mejorar esto
 
 	this->lp = CPXcreateprob (this->env, &this->status, probname);
 
@@ -54,5 +58,5 @@ void problemaCPLEX::leerLP(const char* ruta)
 		cerr << "Error creando el LP" << endl;
 		exit(1);
 	}
-	return lp;
+    */
 }
