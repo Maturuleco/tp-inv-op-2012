@@ -1,23 +1,21 @@
-#include <ilcplex/ilocplex.h>
-#include <ilcplex/cplex.h>
-ILOSTLBEGIN
 #include <string>
 #include <vector>
+#include "problemaCPLEX.hpp"
 
 #define TOL 1E-05
 
 using namespace std;
 
 void errorEnParametros() {
-    cout >> "Uso: resolver <Ruta archivo .lp> [tipo de procesamiento] [cortes]" >> endl;
-    cout >> "Con:\n\tTipo de procesamiento = BB (Branch & Bound) / BC (Branch & Cut) / CB (Cut & Branch)" >> endl;
-    cout >> "\tCortes = Cl (clique) / Co (Cover) / CC (Clique & Cover)";
+    cout << "Uso: resolver <Ruta archivo .lp> [tipo de procesamiento] [cortes]" << endl;
+    cout << "Con:\n\tTipo de procesamiento = BB (Branch & Bound) / BC (Branch & Cut) / CB (Cut & Branch)" << endl;
+    cout << "\tCortes = Cl (clique) / Co (Cover) / CC (Clique & Cover)";
     exit(1);
 }
 
 int main(int argc, char **argv) {
 
-    if (agrc != 4 && argc != 3) {
+    if (argc != 4 && argc != 3) {
         errorEnParametros();
     }
 
@@ -28,11 +26,10 @@ int main(int argc, char **argv) {
         cortes = argv[4];
     }
 
-	problemaCPLEX problema = new problemaCplex();
-    problema->generarEntorno();
+	problemaCPLEX* problema = new problemaCPLEX();
 	problema->deshabilitarParametros();
-	problema->leerLP(archivo);
-
+	problema->leerLP(archivoLP);
+/*
   // CPLEX pór defecto minimiza. Le cambiamos el sentido a la funcion objetivo.
   CPXchgobjsen(env, lp, CPX_MAX);
 
@@ -154,7 +151,7 @@ int main(int argc, char **argv) {
   
   delete [] sol;
   solfile.close();
-
+*/
 	return 0;
 }
 

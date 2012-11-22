@@ -18,7 +18,7 @@ private:
 	CPXENVptr env;	//Puntero al entorno
 	CPXLPptr lp;	//Puntero al lp
 
-	CPLXENVptr generarEntorno();
+	void generarEntorno();
 };
 
 #endif // _PROBLEMACPLEX_H
