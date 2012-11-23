@@ -10,6 +10,27 @@ problemaCPLEX::problemaCPLEX()
 	generarEntorno();
 }
 
+double problemaCPLEX::getObjVal()
+{
+    double objval;
+    this->status = CPXgetobjval(this->env, this->lp, &objval);
+    // TODO: definir si el chequeo del status se hace en esta clase o afuera
+    // por ahora lo pongo en esta clase
+    if (status) {
+        cerr << "Problema obteniendo mejor solución entera" << endl;
+        exit(1);
+    }
+    return objval;
+}
+
+double problemaCPLEX::getTime()
+{
+    double time;
+    this->status = CPXgettime(this->env, &time);
+    return time;
+}
+
+
 void problemaCPLEX::deshabilitarParametros()
 {
 	this->status = CPXsetintparam(this->env, CPX_PARAM_PREIND, 0);
@@ -52,10 +73,28 @@ void problemaCPLEX::leerLP(const char* ruta)
 
 	this->lp = CPXcreateprob (this->env, &this->status, probname);
 
-//	this->status = CPXreadcopymipstart(this->env, this->lp, ruta);
+	this->status = CPXreadcopyprob(this->env, this->lp, ruta, NULL); //TODO: revisar esto
 
 	if (this->lp == NULL) {
 		cerr << "Error creando el LP" << endl;
 		exit(1);
 	}
+}
+
+void problemaCPLEX::escribirLP(const char* ruta)
+{
+    this->status = CPXwriteprob(this->env, this->lp, ruta, NULL);
+    if (status) {
+        cerr << "Problema escribiendo el modelo" << endl;
+        exit(1);
+    }
+}
+
+void problemaCPLEX::setearTiempoMaximo(const int limite)
+{
+    this->status = CPXsetdblparam(this->env, CPX_PARAM_TILIM, limite);
+    if (status) {
+        cerr << "Problema seteando el tiempo maximo de ejecucion" << endl;
+        exit(1);
+    }
 }
