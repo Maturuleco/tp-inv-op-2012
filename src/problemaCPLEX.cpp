@@ -47,16 +47,15 @@ void problemaCPLEX::generarEntorno()
 
 void problemaCPLEX::leerLP(const char* ruta)
 {
-/*	char probname[16];
+	char probname[16];
     strcpy (probname, ruta); // TODO: Mejorar esto
 
 	this->lp = CPXcreateprob (this->env, &this->status, probname);
 
-	this->status = CPXreadcopymipstart(this->env, this->lp, ruta);
+//	this->status = CPXreadcopymipstart(this->env, this->lp, ruta);
 
 	if (this->lp == NULL) {
 		cerr << "Error creando el LP" << endl;
 		exit(1);
 	}
-    */
 }
