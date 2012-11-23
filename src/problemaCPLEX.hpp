@@ -9,9 +9,12 @@ class problemaCPLEX
 public:
 	problemaCPLEX();
 
-	void deshabilitarParametros();
-	void leerLP(const char* ruta);
-	
+	double getObjVal();
+    double getTime();
+    void deshabilitarParametros();
+    void leerLP(const char* ruta);
+    void escribirLP(const char* ruta);
+    void setearTiempoMaximo(const int limite);
 
 private:
 	int status;
