@@ -1,14 +1,13 @@
 #include "problemaCPLEX.hpp"
-#include <ilcplex/ilocplex.h>
-#include <ilcplex/cplex.h>
-ILOSTLBEGIN
-#include <string.h>
 
+// constructor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 problemaCPLEX::problemaCPLEX()
 :status(0), lp(NULL)
 {
 	generarEntorno();
 }
+
+
 
 double problemaCPLEX::getObjVal()
 {
@@ -22,6 +21,7 @@ double problemaCPLEX::getObjVal()
     }
     return objval;
 }
+
 
 double problemaCPLEX::getTime()
 {
@@ -56,15 +56,17 @@ void problemaCPLEX::deshabilitarParametros()
 	this->status = CPXsetintparam(this->env, CPX_PARAM_MIPCBREDLP, CPX_OFF);
 }
 
+
 void problemaCPLEX::generarEntorno()
 {
-	this->env = CPXopenCPLEX(&this->status);
+	env = CPXopenCPLEX(&status);
 
-	if (this->env == NULL) {
+	if (env == NULL) {
 		cerr << "Error creando el entorno" << endl;
 		exit(1);
 	}
 }
+
 
 void problemaCPLEX::leerLP(const char* ruta)
 {
@@ -81,6 +83,7 @@ void problemaCPLEX::leerLP(const char* ruta)
 	}
 }
 
+
 void problemaCPLEX::escribirLP(const char* ruta)
 {
     this->status = CPXwriteprob(this->env, this->lp, ruta, NULL);
@@ -89,6 +92,7 @@ void problemaCPLEX::escribirLP(const char* ruta)
         exit(1);
     }
 }
+
 
 void problemaCPLEX::setearTiempoMaximo(const int limite)
 {

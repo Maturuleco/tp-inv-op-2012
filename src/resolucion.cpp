@@ -1,16 +1,10 @@
-#include <string>
-#include <vector>
-#include "problemaCPLEX.hpp"
-
-#define TOL 1E-05
-
-using namespace std;
+#include "resolucion.hpp"
 
 void errorEnParametros() {
-    cout << "Uso: resolver <Ruta archivo .lp> [tipo de procesamiento] [cortes]" << endl;
-    cout << "Con:\n\tTipo de procesamiento = BB (Branch & Bound) / BC (Branch & Cut) / CB (Cut & Branch)" << endl;
-    cout << "\tCortes = Cl (clique) / Co (Cover) / CC (Clique & Cover)";
-    exit(1);
+    cout << "Uso: resolver <Ruta archivo .lp> [tipo] [cortes]" << endl;
+    cout << "\ttipo = BB (Branch&Bound) - BC (Branch&Cut) - CB (Cut&Branch)" << endl;
+    cout << "\tcortes = Cl (clique) - Co (Cover) - CC (Clique & Cover)" << endl;
+	exit(1);
 }
 
 int main(int argc, char **argv) {
@@ -19,16 +13,20 @@ int main(int argc, char **argv) {
         errorEnParametros();
     }
 
-    char* archivoLP = argv[2];
-    char* tipo = argv[3];
+    char* archivoLP = argv[1];
+    char* tipo = argv[2];
     char* cortes;
     if ( argc == 4 ) {
-        cortes = argv[4];
+        cortes = argv[3];
     }
 
-	problemaCPLEX* problema = new problemaCPLEX();
-	problema->deshabilitarParametros();
-	problema->leerLP(archivoLP);
+	problemaCPLEX problema;
+	problema.deshabilitarParametros();
+	problema.leerLP(archivoLP);
+
+	return 0;
+}
+
 /*
   // CPLEX pór defecto minimiza. Le cambiamos el sentido a la funcion objetivo.
   CPXchgobjsen(env, lp, CPX_MAX);
@@ -47,6 +45,7 @@ int main(int argc, char **argv) {
   int *cutind = new int[n]; // Array con los indices de las variables con coeficientes != 0 en la desigualdad.
   double *cutval = new double[n]; // Array que en la posicion i tiene coeficiente ( != 0) de la variable cutind[i] en la restriccion.
   // Podria ser que algun coeficiente sea cero. Pero a los sumo vamos a tener n coeficientes. CPLEX va a leer hasta la cantidad
+
   // nzcnt que le pasemos.
 
   // Restricciones de grado de salida.
@@ -152,6 +151,4 @@ int main(int argc, char **argv) {
   delete [] sol;
   solfile.close();
 */
-	return 0;
-}
 
