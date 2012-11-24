@@ -1,0 +1,37 @@
+Buenas,
+ 
+Les paso como deberia ser el seteo de parametros para deshabilitar los 
+cortes y demas rutinas que vienen por default en CPLEX. Ademas, hay 
+algunos parametros que estan relacionados con la ejecucion, y hay un 
+particularmente importante (CPX_PARAM_MIPCBREDLP) que permite trabajar 
+dentro de los callbacks haciendo referencia al problema original y no al 
+reducido.
+ 
+Es posible que la lista sea redundante, pero con esto deberia quedar 
+todo deshabilitado.
+ 
+Saludos!
+ 
+Juan.
+ 
+     status = CPXsetintparam(env, CPX_PARAM_PREIND, 0);
+     status = CPXsetintparam(env, CPX_PARAM_PRELINEAR, 0);
+     status = CPXsetintparam(env, CPX_PARAM_EACHCUTLIM, 0);
+     status = CPXsetintparam(env, CPX_PARAM_CUTPASS, 0);
+     status = CPXsetintparam(env, CPX_PARAM_FRACCUTS, -1);
+     status = CPXsetintparam(env, CPX_PARAM_HEURFREQ, -1);
+     status = CPXsetintparam(env, CPX_PARAM_RINSHEUR, -1);
+     status = CPXsetintparam(env, CPX_PARAM_REDUCE, 0);
+     status = CPXsetintparam(env, CPX_PARAM_IMPLBD, -1);
+     status = CPXsetintparam(env, CPX_PARAM_MCFCUTS, -1);
+     status = CPXsetintparam(env, CPX_PARAM_ZEROHALFCUTS, -1);
+     status = CPXsetintparam(env, CPX_PARAM_MIRCUTS, -1);
+     status = CPXsetintparam(env, CPX_PARAM_GUBCOVERS, -1);
+     status = CPXsetintparam(env, CPX_PARAM_FLOWPATHS, -1);
+     status = CPXsetintparam(env, CPX_PARAM_FLOWCOVERS, -1);
+     status = CPXsetintparam(env, CPX_PARAM_DISJCUTS, -1);
+     status = CPXsetintparam(env, CPX_PARAM_COVERS, -1);
+     status = CPXsetintparam(env, CPX_PARAM_CLIQUES, -1);
+     status = CPXsetintparam(env, CPX_PARAM_THREADS, 1);
+     status = CPXsetintparam(env, CPX_PARAM_MIPSEARCH, 1);
+     status = CPXsetintparam(env, CPX_PARAM_MIPCBREDLP, CPX_OFF);
