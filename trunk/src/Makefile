@@ -1,4 +1,4 @@
-SYSTEM     = x86-64_sles10_4.1
+SYSTEM     = x86_sles10_4.1
 LIBFORMAT  = static_pic
 
 #------------------------------------------------------------
@@ -22,7 +22,7 @@ CCC = g++ -O0
 # Compiler options 
 # ---------------------------------------------------------------------
 
-CCOPT = -m64 -O -fPIC -fno-strict-aliasing -fexceptions -DNDEBUG -DIL_STD
+CCOPT = -m32 -O -fPIC -fno-strict-aliasing -fexceptions -DNDEBUG -DIL_STD
 
 # ---------------------------------------------------------------------
 # Link options and libraries
