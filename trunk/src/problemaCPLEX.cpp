@@ -4,101 +4,176 @@
 problemaCPLEX::problemaCPLEX()
 :status(0), lp(NULL)
 {
-	generarEntorno();
+	env = CPXopenCPLEX(&status);
+
+	if (env == NULL) {
+		cerr << "Error creando el entorno." << endl;
+	}
 }
 
 
+// destructor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+problemaCPLEX::~problemaCPLEX()
+{
+	if ( lp != NULL ) {
+		status = CPXfreeprob (env, &lp);
+		if ( status ) {
+			fprintf (stderr, "CPXfreeprob failed, error code %d.\n", status);
+		}
+	}
 
-double problemaCPLEX::getObjVal()
+	if ( env != NULL ) {
+		status = CPXcloseCPLEX (&env);
+
+      if ( status ) {
+			char errmsg[CPXMESSAGEBUFSIZE];
+			fprintf (stderr, "Could not close CPLEX environment.\n");
+			CPXgeterrorstring (env, status, errmsg);
+			fprintf (stderr, "%s", errmsg);
+		}
+	}
+}
+
+
+// para errores ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bool problemaCPLEX::hayError() const
+{
+	return (status != 0);
+}
+
+
+void problemaCPLEX::mostrarError() const
+{
+	char errmsg[CPXMESSAGEBUFSIZE];
+	CPXCCHARptr translation = CPXgeterrorstring (env, status, errmsg);
+	if (translation != NULL){
+		fprintf (stderr, "%s", errmsg);
+	} else {
+		fprintf (stderr, "CPLEX ERROR %d.\n", status);
+	}
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+double problemaCPLEX::optimo()
 {
     double objval;
-    this->status = CPXgetobjval(this->env, this->lp, &objval);
-    // TODO: definir si el chequeo del status se hace en esta clase o afuera
-    // por ahora lo pongo en esta clase
+    status = CPXgetobjval(env, lp, &objval);
+
     if (status) {
-        cerr << "Problema obteniendo mejor solución entera" << endl;
-        exit(1);
+        cerr << "Problema obteniendo mejor solución entera." << endl;
     }
     return objval;
 }
 
 
-double problemaCPLEX::getTime()
-{
-    double time;
-    this->status = CPXgettime(this->env, &time);
-    return time;
-}
-
-
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void problemaCPLEX::deshabilitarParametros()
 {
-	this->status = CPXsetintparam(this->env, CPX_PARAM_PREIND, 0);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_PRELINEAR, 0);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_EACHCUTLIM, 0);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_CUTPASS, 0);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_FRACCUTS, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_HEURFREQ, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_RINSHEUR, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_REDUCE, 0);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_IMPLBD, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_MCFCUTS, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_ZEROHALFCUTS, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_MIRCUTS, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_GUBCOVERS, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_FLOWPATHS, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_FLOWCOVERS, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_DISJCUTS, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_COVERS, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_CLIQUES, -1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_THREADS, 1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_MIPSEARCH, 1);
-	this->status = CPXsetintparam(this->env, CPX_PARAM_MIPCBREDLP, CPX_OFF);
+	status = CPXsetintparam(env, CPX_PARAM_PREIND, 0);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_PRELINEAR, 0);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_EACHCUTLIM, 0);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_CUTPASS, 0);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_FRACCUTS, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_HEURFREQ, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_RINSHEUR, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_REDUCE, 0);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_IMPLBD, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_MCFCUTS, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_ZEROHALFCUTS, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_MIRCUTS, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_GUBCOVERS, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_FLOWPATHS, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_FLOWCOVERS, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_DISJCUTS, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_COVERS, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_CLIQUES, -1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_THREADS, 1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_MIPSEARCH, 1);
+	if (status) return;
+	status = CPXsetintparam(env, CPX_PARAM_MIPCBREDLP, CPX_OFF);
 }
 
 
-void problemaCPLEX::generarEntorno()
-{
-	env = CPXopenCPLEX(&status);
-
-	if (env == NULL) {
-		cerr << "Error creando el entorno" << endl;
-		exit(1);
-	}
-}
-
-
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void problemaCPLEX::leerLP(const char* ruta)
 {
-	char probname[16];
-    strcpy (probname, ruta); // TODO: Mejorar esto
+	lp = CPXcreateprob (env, &status, ruta);
 
-	this->lp = CPXcreateprob (this->env, &this->status, probname);
+	if (lp == NULL) {
+		cerr << "Error leyendo el LP en: " << ruta << "." << endl;
+		return;
+	}
 
-	this->status = CPXreadcopyprob(this->env, this->lp, ruta, NULL); //TODO: revisar esto
+	status = CPXreadcopyprob(env, lp, ruta, NULL);
+}
 
-	if (this->lp == NULL) {
-		cerr << "Error creando el LP" << endl;
-		exit(1);
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void problemaCPLEX::setearTiempoMaximo(double limite)
+{
+    status = CPXsetdblparam(env, CPX_PARAM_TILIM, limite);
+    if (status) {
+        cerr << "Problema seteando el tiempo maximo de ejecucion." << endl;
+    }
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void problemaCPLEX::resolverMIP()
+{
+	status = CPXmipopt (env, lp);
+	if ( status ) {
+		fprintf (stderr, "Failed to optimize MIP.\n");
 	}
 }
 
 
-void problemaCPLEX::escribirLP(const char* ruta)
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void problemaCPLEX::mostrarSolucion()
 {
-    this->status = CPXwriteprob(this->env, this->lp, ruta, NULL);
-    if (status) {
-        cerr << "Problema escribiendo el modelo" << endl;
-        exit(1);
-    }
-}
+	int solstat = CPXgetstat (env, lp);
+	printf ("Solution status %d.\n", solstat);
 
+	double objVal = optimo();
+	printf ("Objective value %.10g\n", objVal );
 
-void problemaCPLEX::setearTiempoMaximo(const int limite)
-{
-    this->status = CPXsetdblparam(this->env, CPX_PARAM_TILIM, limite);
-    if (status) {
-        cerr << "Problema seteando el tiempo maximo de ejecucion" << endl;
-        exit(1);
-    }
+	int cur_numcols = CPXgetnumcols (env, lp);
+	double variables[cur_numcols];
+
+	for (int i = 0; i < cur_numcols; i++){
+		variables[i] = 0.0;
+	}
+
+	double * x = (double*)&variables;
+	status = CPXgetx (env, lp, x, 0, cur_numcols-1);
+	if ( status ) {
+		fprintf (stderr, "Failed to obtain solution.\n");
+		return;
+	}
+
+	for (int j = 0; j < cur_numcols; j++) {
+		if ( fabs (variables[j]) > 1e-10 ) {
+			printf ( "Column %d:  Value = %17.10g\n", j, variables[j]);
+		}
+	}
 }

@@ -13,24 +13,38 @@ ILOSTLBEGIN
 using namespace std;
 
 
-class problemaCPLEX
-{
-public:
-	problemaCPLEX();
+// definicion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+class problemaCPLEX {
 
-	double getObjVal();
-    double getTime();
+public:
+
+	// class
+	problemaCPLEX();
+	~problemaCPLEX();
+
+	bool hayError() const;
+	void mostrarError() const;
+
+	// setters
     void deshabilitarParametros();
     void leerLP(const char* ruta);
+	void resolverMIP();
+    void setearTiempoMaximo(double limite);		// limite en segundos
+	double optimo();
+	void mostrarSolucion();
+
+	// son necesarias?
+    double getTime();
     void escribirLP(const char* ruta);
-    void setearTiempoMaximo(const int limite);
+
 
 private:
+
 	int status;
 	CPXENVptr env;	//Puntero al entorno
 	CPXLPptr lp;	//Puntero al lp
 
-	void generarEntorno();
 };
+
 
 #endif // _PROBLEMACPLEX_H
