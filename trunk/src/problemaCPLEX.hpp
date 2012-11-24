@@ -1,8 +1,17 @@
 #ifndef _PROBLEMACPLEX_H
 #define _PROBLEMACPLEX_H
 
+// cplex callable library ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #include <ilcplex/ilocplex.h>
 #include <ilcplex/cplex.h>
+ILOSTLBEGIN
+
+
+// modulos de c o c++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#include <vector>
+#include <iostream>
+using namespace std;
+
 
 class problemaCPLEX
 {

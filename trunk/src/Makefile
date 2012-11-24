@@ -1,14 +1,6 @@
 SYSTEM     = x86_sles10_4.1
 LIBFORMAT  = static_pic
 
-#------------------------------------------------------------
-#
-# When you adapt this makefile to compile your CPLEX programs
-# please copy this makefile and set CPLEXDIR and CONCERTDIR to
-# the directories where CPLEX and CONCERT are installed.
-#
-#------------------------------------------------------------
-
 CPLEXDIR      = /opt/ibm/ILOG/CPLEX_Studio124/cplex
 CONCERTDIR    = /opt/ibm/ILOG/CPLEX_Studio124/concert
 
@@ -53,9 +45,6 @@ TARGET = resolucion
 all: $(OBJECTS) 
 	$(CCC) $(CCFLAGS) $(OBJECTS) -o $(TARGET) $(CCLNFLAGS)
 
-#
-# produce the .o files from the .cc and .c files
-#
 
 %.o: %.cpp
 	$(CCC) $(CCFLAGS) -c $<
@@ -64,7 +53,3 @@ clean:
 	rm -rf *.o *~
 	rm -rf $(TARGET)
 	rm -rf *.mps *.ord *.sos *.lp *.sav *.net *.msg *.log *.clp
-
-# Local Variables:
-# mode: makefile
-# End:
