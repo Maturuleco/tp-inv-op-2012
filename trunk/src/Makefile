@@ -1,6 +1,6 @@
 SYSTEM_64	= x86-64_sles10_4.1
 SYSTEM_32	= x86_sles10_4.1
-SYSTEM		= $(SYSTEM_32)
+SYSTEM		= $(SYSTEM_64)
 LIBFORMAT	= static_pic
 
 CPLEXDIR	= /opt/ibm/ILOG/CPLEX_Studio124/cplex
@@ -18,7 +18,7 @@ CCC = g++ -O0
 
 CCOPT_64	= -m64 -O -fPIC -fno-strict-aliasing -fexceptions -DNDEBUG -DIL_STD
 CCOPT_32	= -m32 -O -fPIC -fno-strict-aliasing -fexceptions -DNDEBUG -DIL_STD
-CCOPT		= $(CCOPT_32)
+CCOPT		= $(CCOPT_64)
 
 # ---------------------------------------------------------------------
 # Link options and libraries
@@ -38,15 +38,21 @@ CCFLAGS = $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR)
 # Makes
 # ------------------------------------------------------------
 
-SOURCES	= resolucion.cpp problemaCPLEX.cpp
+SOURCES	= resolucion.cpp problemaCPLEX.cpp covers.cpp
 
 OBJECTS	= $(SOURCES:.cpp=.o)
 
 TARGET	= resolucion
 
+
 all: $(OBJECTS) 
 	$(CCC) $(CCFLAGS) $(OBJECTS) -o $(TARGET) $(CCLNFLAGS)
 
+32:
+	$(MAKE) all CCOPT='$(CCOPT_32)' SYSTEM='$(SYSTEM_32)'
+
+64:
+	$(MAKE) all CCOPT='$(CCOPT_64)' SYSTEM='$(SYSTEM_64)'
 
 %.o: %.cpp
 	$(CCC) $(CCFLAGS) -c $<

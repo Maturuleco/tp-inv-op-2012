@@ -1,25 +1,9 @@
+/** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Resolver para problemas de programacion lineal con todas variables binarias.
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
 #include "resolucion.hpp"
 
-// ayuda para usuario ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void errorEnParametros() {
-    cout << "USE>\tresolver <*.(lp|mps|sav)> [tipo] [cortes]" << endl;
-    cout << "\t\ttipo: BB (Branch&Bound) - BC (Branch&Cut) - CB (Cut&Branch)" << endl;
-    cout << "\t\tcortes: Cl (clique) - Co (Cover) - CC (Clique & Cover)" << endl;
-}
-
-
-// manejo de excepciones ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-bool levantaExcepcion(const problemaCPLEX& problema)
-{
-	if ( problema.hayError() ){
-		problema.mostrarError();
-		return true;
-	}
-	return false;
-}
-
-
-// resolver ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int main(int argc, char **argv) {
 
 //// parametros del usuario
@@ -29,21 +13,48 @@ int main(int argc, char **argv) {
     }
 
     char* archivoLP = argv[1];
-    char* tipo = argv[2];
-    char* cortes;
-    if ( argc == 4 ) {
-        cortes = argv[3];
-    }
+	bool usoCliques = false;
+	bool usoCovers = false;
+	bool cutandbranch = false;
+	bool branchandcut = false;
+
+	for (int e = 0; e < argc; e++)
+	{
+		if (strcmp( argv[e], "bc" ) == 0) {
+			branchandcut = true;
+		} else if (strcmp( argv[e], "cb") == 0) {
+			cutandbranch = true;
+		} else if (strcmp( argv[e], "cl") == 0) {
+			usoCliques = true;
+		} else if (strcmp( argv[e], "co") == 0) {
+			usoCovers = true;
+		} else if (strcmp( argv[e], "cc") == 0) {
+			usoCliques = true;
+			usoCovers = true;
+		}
+	}
 
 
-//// preparo el cplex
+//// inicio y configuro el cplex
 	problemaCPLEX problema;
 	if ( levantaExcepcion(problema) ) { return 1; }
 
 	problema.deshabilitarParametros();
 	if ( levantaExcepcion(problema) ) { return 1; }
 
-	problema.leerLP(archivoLP);
+	problema.leerLP( archivoLP );
+	if ( levantaExcepcion(problema) ) { return 1; }
+
+	problema.setearTiempoMaximo(7200.0); 				/* 7200.0 segs = 2 hrs */
+	if ( levantaExcepcion(problema) ) { return 1; }
+
+	problema.elegirEstrategiaDeSeleccionDeNodo(); 		/* se usa 'best-bound' */
+	if ( levantaExcepcion(problema) ) { return 1; }
+
+	problema.elegirEstrategiaDeSeleccionDeVariable();	/* se usa 'min-infeas' */
+	if ( levantaExcepcion(problema) ) { return 1; }
+
+	problema.configuracion(branchandcut,cutandbranch,usoCliques,usoCovers);
 	if ( levantaExcepcion(problema) ) { return 1; }
 
 
