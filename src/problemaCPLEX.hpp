@@ -20,6 +20,8 @@ enum ALGORITMO {BRANCH_AND_BOUND, BRANCH_AND_CUT, CUT_AND_BRANCH};
 
 
 // funcion callback para CPLEX ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int LIMITE_PARA_BRANCHING = 0;
+
 static int CPXPUBLIC
 	planosDeCorte	(CPXCENVptr env,		// puntero a environment de CPLEX
 					void *cbdata,			// puntero necesario para llamar otras rutinas

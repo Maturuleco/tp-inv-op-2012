@@ -226,6 +226,8 @@ void problemaCPLEX::mostrarSolucion()
 			printf ( "Column %d:  Value = %17.10g\n", j, variables[j]);
 		}
 	}
+	printf("Cortes Cover Greedy Agregados> %d\n", mochilas.cuantosGreedy());
+	printf("Cortes Cover Dynamic Agregados> %d\n", mochilas.cuantosDinamicos());
 } /* mostrar por stdout los resultados obtenidos */
 
 
@@ -264,8 +266,8 @@ int problemaCPLEX::agregarCortesCover
 					cutind[j] = indices[j];
 				}
 
-				estado = CPXcutcallbackadd(env, cbdata, wherefrom,
-											nzcnt, rhs, 'L', cutind, cutval, 1);
+				estado = CPXcutcallbackadd(env, cbdata, wherefrom, nzcnt, rhs, 'L', 
+											cutind, cutval, CPX_USECUT_FORCE);
 
 				if (estado){
 					fprintf(stderr,"Falla en agregar corte cover.\n");
@@ -360,10 +362,11 @@ int problemaCPLEX::agregarMochilas()
 					fila[j] = -1.0*fila[j];
 				}
 			}
-
-			mochilas.agregarRestriccionesTraducidas(r, fila, indices, b);			
+			mochilas.agregarRestriccionesTraducidas(r, fila, indices, b);
 		}
 	}
+
+	return status;
 } /* traduzco restricciones a desigualdades mochila y las guardo */
 
 
@@ -404,6 +407,8 @@ static int CPXPUBLIC
 	bool esRaiz = estoyEnRaiz(env, cbdata, wherefrom, estado);
 	if (estado or (soloEnRaiz and not(esRaiz))) { return estado; }
 
+	if (LIMITE_PARA_BRANCHING > 10) { return estado; }
+
 	int tamanho = problema->numeroVariables();
 	double x[tamanho];
 	estado = CPXgetcallbacknodex(env, cbdata, wherefrom, x, 0, tamanho-1);
@@ -420,7 +425,6 @@ static int CPXPUBLIC
 	{
 		addcuts += (problema->agregarCortesCover
 					(env,cbdata,wherefrom,cbhandle, estado, x, tamanho));
-
 		if (estado){
 			return (estado);
 		}
@@ -429,6 +433,7 @@ static int CPXPUBLIC
 
 //// preparo salida avisandole a CPLEX si se crearon o no cortes
 	if ( addcuts > 0 ) {
+		LIMITE_PARA_BRANCHING += addcuts;
 		*useraction_p = CPX_CALLBACK_SET; 
 	}
 
