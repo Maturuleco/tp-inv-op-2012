@@ -11,6 +11,7 @@
 #include <vector>
 #include <iostream>
 #include <math.h>
+#include <stdio.h>
 using namespace std;
 
 
@@ -28,15 +29,20 @@ public:
 	int numeroRestricciones() const;
 	int numeroVariables() const;
 	bool puedoBuscarEnRestriccion(int) const;
-	void buscarCover(int,const double*,int,vector<double>&,vector<int>&,double&) const;
+	int cuantosGreedy() const;
+	int cuantosDinamicos() const;
+
 
 	// setters
+	void buscarCover(int,const double*,int,vector<double>&,vector<int>&,double&);
 	void agregarRestriccionesTraducidas
 			(int, const vector<double>&, const vector<int>&, double);
 
 private:
 
-	bool resolverMochila(int,const vector<double>&,vector<bool>&) const;
+	bool resolverMochila(int,const vector<double>&,vector<bool>&);
+	bool resolverMochilaGreedy(int,const vector<double>&,vector<bool>&) const;
+	bool resolverMochilaDinamica(int,const vector<double>&,vector<bool>&) const;
 
 	int cant_restricciones;
 	int cant_variables;
@@ -46,6 +52,9 @@ private:
 	vector< vector<int> > indices;			// indica el indice de la variable
 	vector<bool> validas;					// dice si la la restriccion es usable
 	vector<double> rhs;						// guarda el rhs de la restriccion
+
+	int coversGreedyAgregados;
+	int coversDinamicosAgregados;
 };
 
 
