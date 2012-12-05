@@ -20,8 +20,6 @@ enum ALGORITMO {BRANCH_AND_BOUND, BRANCH_AND_CUT, CUT_AND_BRANCH};
 
 
 // funcion callback para CPLEX ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int LIMITE_PARA_BRANCHING = 0;
-
 static int CPXPUBLIC
 	planosDeCorte	(CPXCENVptr env,		// puntero a environment de CPLEX
 					void *cbdata,			// puntero necesario para llamar otras rutinas
@@ -30,6 +28,7 @@ static int CPXPUBLIC
 					int *useraction_p);		/* digo que hacer despues de rutina:
 											   CPX_CALLBACK_DEFAULT cortes agregados
 											   CPX_CALLBACK_FAIL terminar optimizacion
+											   CPX_CALLBACK_ABORT_LOOP_CUT hace branching
 											   CPX_CALLBACK_SET cortes agregados */
 	/** la funcion devuelve 0 si hubo exito, o nonzero si hubo error */
 

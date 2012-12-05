@@ -180,7 +180,7 @@ void problemaCPLEX::configuracion(bool bc, bool cb, bool cl, bool co)
 		tipo = CUT_AND_BRANCH;
 	}
 
-	status = CPXsetcutcallbackfunc(env, planosDeCorte, this);
+	status = CPXsetusercutcallbackfunc(env, planosDeCorte, this);
 	if (status) {
 		fprintf(stderr, "Falla en CPXsetcutcallbackfunc().\n");
 	}
@@ -395,6 +395,9 @@ bool estoyEnRaiz(CPXCENVptr env, void* cbdata, int wherefrom, int& estado)
 } /* para saber si el callback vuelve de analizar al nodo raiz */
 
 
+int LIMITE_PARA_BRANCHING = 0;
+
+
 static int CPXPUBLIC 
 	planosDeCorte
 		(CPXCENVptr env, void *cbdata, int wherefrom, void *cbhandle, int *useraction_p)
@@ -405,9 +408,18 @@ static int CPXPUBLIC
 	problemaCPLEX *problema = (problemaCPLEX*)cbhandle;
 	bool soloEnRaiz = problema->elTipo() == CUT_AND_BRANCH;
 	bool esRaiz = estoyEnRaiz(env, cbdata, wherefrom, estado);
-	if (estado or (soloEnRaiz and not(esRaiz))) { return estado; }
+	*useraction_p = CPX_CALLBACK_ABORT_CUT_LOOP;
+	
+	if (estado or (soloEnRaiz and not(esRaiz)))
+	{
+		return estado;
+	}
 
-	if (LIMITE_PARA_BRANCHING > 10) { return estado; }
+	if (LIMITE_PARA_BRANCHING > 10)
+	{
+		LIMITE_PARA_BRANCHING = 0;
+		return estado;
+	}
 
 	int tamanho = problema->numeroVariables();
 	double x[tamanho];
@@ -416,8 +428,6 @@ static int CPXPUBLIC
 		fprintf(stderr, "Problema obteniendo x* en planosDeCorte.\n");
 		return estado;
 	}
-
-	*useraction_p = CPX_CALLBACK_DEFAULT;
 
 
 //// cortes cover
