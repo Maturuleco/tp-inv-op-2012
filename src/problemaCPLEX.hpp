@@ -50,6 +50,7 @@ public:
 	int numeroRestricciones() const;
 
 	// setters
+    double getTime();
 	double optimo();
     void leerLP(const char* ruta);
     void deshabilitarParametros();
@@ -64,11 +65,6 @@ public:
 	bool sePidieronCortesCover();
 	int agregarCortesCover(CPXCENVptr,void*,int,void*,int&,const double*,int);
 
-	// son necesarias?
-    double getTime();
-    void escribirLP(const char* ruta);
-
-
 private:
 
 	// preparacion de cortes cover (pre optimizacion)
@@ -80,6 +76,8 @@ private:
 	int armarGrafoDeConflictos();
 
 	// representacion interna
+	double tiempoDeOptimizacion;
+	int numeroDeNodosDeOptimizacion;
 	int status;
 	CPXENVptr env;	//Puntero al entorno
 	CPXLPptr lp;	//Puntero al lp
