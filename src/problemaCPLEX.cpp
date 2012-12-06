@@ -213,6 +213,20 @@ void problemaCPLEX::mostrarSolucion()
 {
 	double tolerancia = 1e-10;
 
+	// muestro que algoritmo se corrio
+	switch(tipo)
+	{
+		case BRANCH_AND_BOUND:
+			printf("Branch & Bound.\n");
+			break;
+		case BRANCH_AND_CUT:
+			printf("Branch & Cut.\n");
+			break;
+		case CUT_AND_BRANCH:
+			printf("Cut & Branch.\n");
+			break;
+	}
+
 	// muestro estado de la solucion
 	int solstat = CPXgetstat (env, lp);
 	char buffer[511];
@@ -245,7 +259,7 @@ void problemaCPLEX::mostrarSolucion()
 	}
 
 	// muestro informacion del arbol de branching
-	printf("Tiempo en Optimizar: %f [segs].\n",tiempoDeOptimizacion);
+	printf("Tiempo en Optimizar: %.3f [segs].\n",tiempoDeOptimizacion);
 	printf("Numero de nodos: %d.\n", numeroDeNodosDeOptimizacion);
 	printf("Cortes Cover Dynamic Agregados> %d\n", mochilas.cuantosDinamicos());
 	printf("Cortes Cover Greedy Agregados> %d\n", mochilas.cuantosGreedy());
