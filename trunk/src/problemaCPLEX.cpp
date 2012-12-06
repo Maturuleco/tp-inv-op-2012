@@ -190,7 +190,19 @@ void problemaCPLEX::configuracion(bool bc, bool cb, bool cl, bool co)
 // optimizacion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void problemaCPLEX::resolverMIP()
 {
+	tiempoDeOptimizacion = 0.0;
+	numeroDeNodosDeOptimizacion = 0;
+
+	double time_beg = 0.0;
+	double time_end = 0.0;
+
+	status = CPXgettime(env,&time_beg);
 	status = CPXmipopt (env, lp);
+	status = CPXgettime(env,&time_end);
+
+	numeroDeNodosDeOptimizacion = CPXgetnodecnt(env,lp);
+	tiempoDeOptimizacion = time_end - time_beg;
+
 	if ( status ) {
 		fprintf (stderr, "Failed to optimize MIP.\n");
 	}
@@ -201,33 +213,42 @@ void problemaCPLEX::mostrarSolucion()
 {
 	double tolerancia = 1e-10;
 
+	// muestro estado de la solucion
 	int solstat = CPXgetstat (env, lp);
-	printf ("Solution status %d.\n", solstat);
+	char buffer[511];
+	CPXCHARptr statstring = CPXgetstatstring(env,solstat,buffer);
+	if (statstring == NULL)
+		printf("Error al pedir SOLUTION STATUS.\n");
+	else
+		printf ("Solution status: %s.\n",buffer);
 
+	// muestro funcional
 	double objVal = optimo();
-	printf ("Objective value %.10g\n", objVal );
+	printf ("Objective value: %.10g\n", objVal );
 
+	// muestro valores de las variables
 	int cur_numcols = numeroVariables();
 	double variables[cur_numcols];
-
 	for (int i = 0; i < cur_numcols; i++){
 		variables[i] = 0.0;
 	}
-
 	double * x = (double*)&variables;
 	status = CPXgetx (env, lp, x, 0, cur_numcols-1);
 	if ( status ) {
 		fprintf (stderr, "Failed to obtain solution.\n");
 		return;
 	}
-
 	for (int j = 0; j < cur_numcols; j++) {
 		if ( fabs (variables[j]) > tolerancia ) {
 			printf ( "Column %d:  Value = %17.10g\n", j, variables[j]);
 		}
 	}
-	printf("Cortes Cover Greedy Agregados> %d\n", mochilas.cuantosGreedy());
+
+	// muestro informacion del arbol de branching
+	printf("Tiempo en Optimizar: %f [segs].\n",tiempoDeOptimizacion);
+	printf("Numero de nodos: %d.\n", numeroDeNodosDeOptimizacion);
 	printf("Cortes Cover Dynamic Agregados> %d\n", mochilas.cuantosDinamicos());
+	printf("Cortes Cover Greedy Agregados> %d\n", mochilas.cuantosGreedy());
 } /* mostrar por stdout los resultados obtenidos */
 
 
@@ -409,7 +430,7 @@ static int CPXPUBLIC
 	bool soloEnRaiz = problema->elTipo() == CUT_AND_BRANCH;
 	bool esRaiz = estoyEnRaiz(env, cbdata, wherefrom, estado);
 	*useraction_p = CPX_CALLBACK_ABORT_CUT_LOOP;
-	
+
 	if (estado or (soloEnRaiz and not(esRaiz)))
 	{
 		return estado;
@@ -442,7 +463,8 @@ static int CPXPUBLIC
 
 
 //// preparo salida avisandole a CPLEX si se crearon o no cortes
-	if ( addcuts > 0 ) {
+	if ( addcuts > 0 )
+	{
 		LIMITE_PARA_BRANCHING += addcuts;
 		*useraction_p = CPX_CALLBACK_SET; 
 	}

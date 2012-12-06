@@ -187,17 +187,17 @@ void Covers::buscarCover(int r, const double* x_opt, int tamanho, vector<double>
 bool Covers::resolverMochila
 	(int r,const vector<double>& objfunc,vector<bool>& agregar)
 {
-	// intento algoritmo goloso
-	if (resolverMochilaGreedy(r,objfunc,agregar))
-	{
-		coversGreedyAgregados += 1;
-		return true;
-	}
-
 	// intento algoritmo programacion dinamica
 	if (resolverMochilaDinamica(r,objfunc,agregar))
 	{
 		coversDinamicosAgregados += 1;
+		return true;
+	}
+
+	// intento algoritmo goloso
+	if (resolverMochilaGreedy(r,objfunc,agregar))
+	{
+		coversGreedyAgregados += 1;
 		return true;
 	}
 
@@ -291,14 +291,15 @@ bool Covers::resolverMochilaDinamica
 		acum += objfunc[j];
 	}
 
-	// me fijo si escala el algoritmo con limite 1000
-	if ((maximo-minimo > 1000) or (minimo<0))
+	int pesoExtra = maximo-minimo;
+
+	// me fijo si escala el algoritmo con limite 100
+	if ((pesoExtra > 100) or (minimo<0))
 	{
 		return false;
 	}
 
 	// preparo tablita de programacion dinamica
-	int pesoExtra = maximo-minimo;
 	vector<double> p(pesoExtra+1, acum);
 	vector< bool > q(pesoExtra+1, false);
 	vector< vector<double> > tabla(vars+1, p);
