@@ -1,18 +1,13 @@
-/**
+/** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * 'Covers' permite guardar restricciones normalizandolas a mochila (solo sirve para 
  * problemas con variables binarias) y buscar un plano de corte con una solucion de la
  * relajacion lineal.
- */
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-#ifndef _COVERS_H_
-#define _COVERS_H_
+#ifndef __COVERS_H__
+#define __COVERS_H__
 
-// modulos de c o c++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#include <vector>
-#include <iostream>
-#include <math.h>
-#include <stdio.h>
-using namespace std;
+#include "aux.hpp"
 
 
 // definicion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -31,7 +26,6 @@ public:
 	bool puedoBuscarEnRestriccion(int) const;
 	int cuantosGreedy() const;
 	int cuantosDinamicos() const;
-
 
 	// setters
 	void buscarCover(int,const double*,int,vector<double>&,vector<int>&,double&);
@@ -58,4 +52,4 @@ private:
 };
 
 
-#endif // _COVERS_H_
+#endif // __COVERS_H__

@@ -1,18 +1,20 @@
-#ifndef _PROBLEMACPLEX_H_
-#define _PROBLEMACPLEX_H_
+/** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Clase para intermediar entre el CPLEX y modulos propios.
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+#ifndef __PROBLEMACPLEX_H__
+#define __PROBLEMACPLEX_H__
+
+// modulos propios ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#include "aux.hpp"
+#include "grafo.hpp"
+#include "covers.hpp"
+
 
 // cplex callable library ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #include <ilcplex/ilocplex.h>
 #include <ilcplex/cplex.h>
 ILOSTLBEGIN
-
-
-// modulos de c o c++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#include <vector>
-#include <iostream>
-#include "covers.hpp"
-#include <math.h>
-using namespace std;
 
 
 // distinguir algoritmo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,8 +64,11 @@ public:
 	void resolverMIP();
 
 	// cortes cover
-	bool sePidieronCortesCover();
+	bool sePidieronCortesCover() const;
 	int agregarCortesCover(CPXCENVptr,void*,int,void*,int&,const double*,int);
+
+	// cortes clique
+	bool sePidieronCortesClique() const;
 
 private:
 
@@ -76,14 +81,15 @@ private:
 	int armarGrafoDeConflictos();
 
 	// representacion interna
-	double tiempoDeOptimizacion;
-	int numeroDeNodosDeOptimizacion;
-	int status;
-	CPXENVptr env;	//Puntero al entorno
-	CPXLPptr lp;	//Puntero al lp
-	enum ALGORITMO tipo;
-	Covers mochilas;
+	double tiempoDeOptimizacion;		/* tiempo de CPXmipopt */
+	int numeroDeNodosDeOptimizacion;	/* nodos usados en CPXmipopt */
+	int status;							/* status de rutinas de CPLEX */
+	CPXENVptr env;						/* entorno del MIP */
+	CPXLPptr lp;						/* el prbolema MIP */
+	enum ALGORITMO tipo;				/* tipo de algoritmo de resolucion */
+	Covers mochilas;					/* desigualdades mochila del MIP */
+	Grafo grafoDeConflictos;			/* grafo de conflictos a partir de restriccion */
 };
 
 
-#endif // _PROBLEMACPLEX_H_
+#endif // __PROBLEMACPLEX_H__

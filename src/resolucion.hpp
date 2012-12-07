@@ -1,27 +1,12 @@
-#ifndef _RESOLUCION_H_
-#define _RESOLUCION_H_
+/** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * Resolver para problemas de programacion lineal con todas variables binarias.
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-// modulos propios ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#ifndef __RESOLUCION_H__
+#define __RESOLUCION_H__
+
+
 #include "problemaCPLEX.hpp"
-#include <string.h>
-
-// ayuda para usuario ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void errorEnParametros() {
-    cout << "\nUSE>\t./resolucion [instancia] [tipo] [cortes]\n\n";
-	cout << "  -[instancia]: archivo en formato LP, MPS o SAV\n";
-    cout << "  -[tipo]: bb, bc, cb\n";
-	cout << "    bb = Branch & Bound\n";
-	cout << "    bc = Branch & Cut\n";
-	cout << "    cb = Cut & Branch\n";
-    cout << "  -[cortes]: cl, co, cc\n";
-	cout << "    cl = Cortes clique\n";
-	cout << "    co = Cortes cover\n";
-	cout << "    cc = Cortes clique + Cortes cover\n";
-	cout << "\nEjemplo>\n  ./resolucion knapsack/knapsack.lp bb\n";
-	cout << "    -branch and bound sin usar planos de corte-\n";
-	cout << "\nEjemplo>\n  ./resolucion knapsack/knapsack.lp bc cc\n";
-	cout << "    -branch and cut usando cortes clique y cover-\n\n";
-}
 
 
 // manejo de excepciones ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,7 +17,7 @@ bool levantaExcepcion(const problemaCPLEX& problema)
 		return true;
 	}
 	return false;
-}
+} /* para saber si hay que mostrar un error de CPLEX */
 
 
-#endif // _RESOLUCION_H_
+#endif // __RESOLUCION_H__

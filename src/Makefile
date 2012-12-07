@@ -38,7 +38,7 @@ CCFLAGS = $(CCOPT) -I$(CPLEXINCDIR) -I$(CONCERTINCDIR)
 # Makes
 # ------------------------------------------------------------
 
-SOURCES	= covers.cpp problemaCPLEX.cpp resolucion.cpp
+SOURCES	= aux.cpp grafo.cpp covers.cpp problemaCPLEX.cpp resolucion.cpp
 
 OBJECTS	= $(SOURCES:.cpp=.o)
 

@@ -267,7 +267,7 @@ void problemaCPLEX::mostrarSolucion()
 
 
 // cortes covers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-bool problemaCPLEX::sePidieronCortesCover()
+bool problemaCPLEX::sePidieronCortesCover() const
 {
 	return not(mochilas.estaVacio());
 }
@@ -318,10 +318,17 @@ int problemaCPLEX::agregarCortesCover
 } /* busca cortes cover y devuelve cuantos agrego */
 
 
+// cortes clique ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bool problemaCPLEX::sePidieronCortesClique() const
+{
+	return not(grafoDeConflictos.grafoVacio());
+}
+
+
 
 /** PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-// para covers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// para leer restricciones del problema original ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void problemaCPLEX::dameRestriccion(int r, vector<double>& fila, vector<int>& indices)
 {
 	int rmatbeg[1];
@@ -364,6 +371,7 @@ double problemaCPLEX::dameRhs(int r)
 } /* obtiene el RHS r-esimo del problema original */
 
 
+// guardo restricciones en Covers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int problemaCPLEX::agregarMochilas()
 {
 	int numR = numeroRestricciones();
@@ -405,10 +413,72 @@ int problemaCPLEX::agregarMochilas()
 } /* traduzco restricciones a desigualdades mochila y las guardo */
 
 
-// para cliques ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// preparo el grafo de conflictos ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 int problemaCPLEX::armarGrafoDeConflictos()
 {
-	return 0;
+	int numR = numeroRestricciones();
+	int numV = numeroVariables();
+	if (numV*numR == 0) { return 1; }
+
+	grafoDeConflictos.ingresarCantidadDeNodos(numV);
+
+	char senses[numR];
+	status = CPXgetsense(env, lp, senses, 0, numR-1);
+	if (status) { return (status); }
+
+	vector< vector<double> > desigualdades(numR);
+	vector< vector<int> > subindices(numR);
+	vector<double> bes(numR, 0.0);
+
+	// primera fase de busqueda de ejes
+	for (int r = 0; r < numR; r++)
+	{
+		char sentido = senses[r];
+		if ((sentido == 'L') or (sentido == 'G'))
+		{
+			dameRestriccion(r, desigualdades[r], subindices[r]);
+			if (status) { return (status); }
+
+			bes[r] = dameRhs(r);
+			if (status) { return (status); }
+
+			if (sentido == 'G')
+			{
+				bes[r] = -1.0*bes[r];
+				for (int j = 0; j < desigualdades[r].size(); j++)
+				{
+					desigualdades[r][j] = -1.0 * desigualdades[r][j];
+				}
+				senses[r] = 'L';
+			}
+			grafoDeConflictos.buscarEjesEnRestriccion
+				(desigualdades[r],subindices[r],bes[r]);
+		}
+	}
+
+	// si no encontre ejes con primera fase no puedo buscar en segunda fase
+	if (grafoDeConflictos.grafoVacio())
+		return status;
+
+	// segunda fase de busqueda de ejes
+	while (true)
+	{
+		int ejesNuevos = 0;
+
+		for (int r = 0; r < numR; r++)
+		{
+			if (senses[r] == 'L')
+			{
+				ejesNuevos += grafoDeConflictos.buscarConCliqueEnRestriccion
+								(desigualdades[r],subindices[r],bes[r]);
+			}
+		}
+
+		if (ejesNuevos == 0)
+			break;
+	}
+
+	return status;
 } /* armo grafo de conflictos y lo guardo */
 
 
