@@ -1,7 +1,3 @@
-/** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
- * Resolver para problemas de programacion lineal con todas variables binarias.
- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-
 #include "resolucion.hpp"
 
 int main(int argc, char **argv) {
@@ -54,7 +50,7 @@ int main(int argc, char **argv) {
 	problema.elegirEstrategiaDeSeleccionDeVariable();	/* se usa 'min-infeas' */
 	if ( levantaExcepcion(problema) ) { return 1; }
 
-	problema.configuracion(branchandcut,cutandbranch,usoCliques,usoCovers);
+	problema.configuracion(branchandcut, cutandbranch, usoCliques, usoCovers);
 	if ( levantaExcepcion(problema) ) { return 1; }
 
 

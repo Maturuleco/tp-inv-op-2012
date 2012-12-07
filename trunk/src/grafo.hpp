@@ -1,22 +1,17 @@
-#ifndef _GRAFO_H_
-#define _GRAFO_H_
+/** ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * 'Grafo' guarda el grafo de conflictos encontrado a partir de las restricciones.
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
-// modulos de c o c++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#include <vector>
-#include <iostream>
-#include <math.h>
-using namespace std;
+#ifndef __GRAFO_H__
+#define __GRAFO_H__
+
+#include "aux.hpp"
 
 
 // macros ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #define forn(i,n) for(int i = 0; i < (int)(n); i++)
-
-
-// structs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-struct Nodo {
-	int numero;		// [0..n-1] originales [n..2n-1] complemento
-	double peso;
-};
+#define forkn(i,k,n) for(int i = (int)(k); i < (int)(n); i++)
+#define rforn(i,n) for(int i = (int)(n-1); i >= 0; i--)
 
 
 // definicion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -24,19 +19,33 @@ class Grafo {
 
 public:
 
+	// constructor
 	Grafo();
 	void ingresarCantidadDeNodos(int);
 
-	void agregarEje(const Nodo&, const Nodo&);
+	// getters
+	bool grafoVacio() const;
+	int particionarEnCliques(const vector<double>&,const vector<int>&,
+							 const vector<int>&,vector<int>&) const;
 
-	const vector<Nodo>& vecinos(int numero) const;
-	list< list<Nodo> > particionarEnCliques(const list<int>&) const;
+	// setters
+	void agregarEje(int,int);
+	void buscarEjesEnRestriccion(const vector<double>&,const vector<int>&,double);
+	int buscarConCliqueEnRestriccion(const vector<double>&,const vector<int>&,double);
+
 
 private:
 
-	vector< vector<Nodo> > graph;
+	/* ACLARACIONES:
+	 * - los nodos [0..n-1] son originales, los nodos [n..2*n-1] son complemento.
+	 * - no agregamos los ejes entre un nodo y su complemento.
+	 * - 'graph' es una matriz de adyacencia.
+	 */
 
+	int numeroNodos;
+	int numeroEjes;
+	vector< vector<bool> > graph;
 };
 
 
-#endif // _GRAFO_H_
+#endif // __GRAFO_H__

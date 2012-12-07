@@ -216,9 +216,6 @@ bool Covers::resolverMochilaGreedy
 	vector<int> jotas(vars,0);			// indices de base
 	vector<double> base(vars,0.0);		// beneficios (1-x_j)/a_rj
 
-	vector<int> jotasBis(vars,0);		// indices de trabajo
-	vector<double> trabajo(vars,0.0);	// auxiliar para ordenar
-
 	// lleno vector de beneficios
 	for (int j = 0; j < vars; j++)
 	{
@@ -226,38 +223,8 @@ bool Covers::resolverMochilaGreedy
 		jotas[j] = j;
 	}
 
-	// merge sort de beneficios
-	for (int width = 1; width < vars; width *= 2)
-	{
-		for (int k = 0; k < vars; k += 2*width)
-		{
-			int beg = k;
-			int mid = min(k+width,vars);
-			int end = min(k+2*width,vars);
-
-			int left = beg;
-			int right = mid;
-
-			for (int e = beg; e < end; e++)
-			{
-				if ((left < mid) and (right >= end || base[left] <= base[right]))
-				{
-					trabajo[e] = base[left];
-					jotasBis[e] = jotas[left];
-					left += 1;
-				}
-				else
-				{
-					trabajo[e] = base[right];
-					jotasBis[e] = jotas[right];
-					right += 1;
-				}
-			}
-		}
-
-		base = trabajo;
-		jotas = jotasBis;
-	}
+	// ordeno de menor a mayor los beneficios
+	mergeSort(jotas,base);
 
 	// busco superar cota segun el orden de beneficios
 	for (int j = 0; limite < ceil(rhs[r]) + 1.0 ; j++)
