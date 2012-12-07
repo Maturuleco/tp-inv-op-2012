@@ -25,14 +25,32 @@ bool Grafo::cuantosCortes() const
 } /* para saber cuantos cortes clique se agregaron */
 
 
-// armado de grafo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void Grafo::agregarEje(int u,int v)
+int Grafo::cuantosEjes() const
 {
-	bool noEstaba = not(graph[u][v] or graph[v][u]);
+	return numeroEjes;
+} /* para saber cuantos ejes tiene el grafo */
+
+
+bool Grafo::sonVecinos(int u,int v,bool uComplemento, bool vComplemento) const
+{
+	u += (uComplemento)? numeroNodos : 0;
+	v += (vComplemento)? numeroNodos : 0;
+
+	return (graph[u][v] and graph[v][u]);
+} /* para saber si los nodos 'u' y 'v' son vecinos */
+
+
+// armado de grafo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void Grafo::agregarEje(int u,int v, bool uComplemento, bool vComplemento)
+{
+	u += (uComplemento)? numeroNodos : 0;
+	v += (vComplemento)? numeroNodos : 0;
+
+	if (not sonVecinos(u,v))
+		numeroEjes += 1;
+
 	graph[u][v] = true;
 	graph[v][u] = true;
-	if (noEstaba)
-		numeroEjes += 1;
 } /* agrega un eje al grafo */
 
 
@@ -75,18 +93,7 @@ void Grafo::buscarEjesEnRestriccion
 
 				// si se hace infactible el problema agrego nuevo eje
 				if (l_r > b)
-				{
-					if (v_i == 0)
-						v_i = numeroNodos + 1;
-
-					if (v_j == 0)
-						v_j = numeroNodos + 1;
-
-					v_i = v_i + indices[i] - 1;
-					v_j = v_j + indices[j] - 1;
-
-					agregarEje(v_i, v_j);
-				}
+					agregarEje(indices[i], indices[j], v_i==0, v_j==0);
 			}
 		}
 	}
@@ -104,7 +111,7 @@ int Grafo::buscarConCliqueEnRestriccion
 
 	vector<double> w_r(subnodos,0.0);
 	vector<int> jotas(subnodos,0);
-	vector<bool> complementoEnGdeU(subnodos,true);
+	vector<bool> complementoEnGdeU(subnodos,false);
 
 	// obtengo el subgrafo G(U)
 	forn(i,subnodos)
@@ -114,7 +121,7 @@ int Grafo::buscarConCliqueEnRestriccion
 
 		if (a_r[i] > 0.0)
 		{
-			complementoEnGdeU[i] = false;
+			complementoEnGdeU[i] = true;
 			acum += a_r[i];
 		}
 	}
@@ -122,7 +129,7 @@ int Grafo::buscarConCliqueEnRestriccion
 	// particionar en cliques
 	mergeSort(jotas, w_r);
 	vector<int> vEnClique(subnodos, subnodos+1);
-	nroCliques = particionarEnCliques(w_r, jotas, indices, vEnClique);
+	nroCliques = particionarEnCliques(jotas, indices, complementoEnGdeU, vEnClique);
 
 	forn(i,subnodos)
 		w_r[i] = fabs(a_r[i]);
@@ -174,18 +181,7 @@ int Grafo::buscarConCliqueEnRestriccion
 
 				// si se hace infactible el problema agrego nuevo eje
 				if (l_r > b)
-				{
-					if (v_i == 0)
-						v_i = numeroNodos + 1;
-
-					if (v_j == 0)
-						v_j = numeroNodos + 1;
-
-					v_i = v_i + indices[i] - 1;
-					v_j = v_j + indices[j] - 1;
-
-					agregarEje(v_i, v_j);
-				}
+					agregarEje(indices[i], indices[j], v_i==0, v_j==0);
 			}
 		}
 	}
@@ -195,17 +191,18 @@ int Grafo::buscarConCliqueEnRestriccion
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int Grafo::particionarEnCliques(const vector<double>& w_r,const vector<int>& jotas,
-								const vector<int>& indices, vector<int>& vEnClique) const
+int Grafo::particionarEnCliques(const vector<int>& jotas,const vector<int>& indices,
+								const vector<bool>& cEnGdeU,vector<int>& vEnClique) const
 {
 	// 'jotas' mapea i al indice en la restriccion (i -> a_r)
 	// 'indices' mapea i al indice en el grafo (a_r -> nodo real)
 
-	int vars = w_r.size();
-	vector<bool> visitados(vars,false);
+	int v = 0;	// i
+	int u = 0;	// j
+	int w = 0;	// k
 	int cliqueActual = 0;
-	int v = 0;
-	int u = 0;
+	int vars = jotas.size();
+	vector<bool> visitados(vars,false);
 	bool vecinoDeTodos = false;
 	bool esVecino = false;
 
@@ -230,14 +227,11 @@ int Grafo::particionarEnCliques(const vector<double>& w_r,const vector<int>& jot
 			u = jotas[j];
 			vecinoDeTodos = true;
 
-			list<int>::iterator enClique = laClique.begin();
-
-			// agrego al nodo 'u' si es vecino de todos los nodos que estan en 'enClique'
-			for (; enClique != laClique.end(); enClique++)
+			// agrego al nodo 'u' si es vecino de todos los nodos que estan en 'laClique'
+			for (list<int>::iterator k = laClique.begin(); k != laClique.end(); k++)
 			{
-				esVecino = graph[ indices[u] ][ indices[ jotas[*enClique] ] ];
-
-				if (not esVecino)
+				w = jotas[*k];
+				if (not sonVecinos(indices[u], indices[w], cEnGdeU[u], cEnGdeU[w]))
 				{
 					vecinoDeTodos = false;
 					break;
