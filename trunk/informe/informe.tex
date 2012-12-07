@@ -17,6 +17,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage{fancyhdr}
 \usepackage{vmargin}
+\usepackage{hyperref}
+\usepackage{enumerate}
 
 \renewcommand{\thesection}{\arabic{section}}
 \renewcommand{\headrulewidth}{0.4pt}
@@ -39,9 +41,9 @@
 \pagestyle{fancy}
 \fancyhead{}
 \fancyfoot{}
-\fancyhead[L]{\footnotesize Borghini, Lamelas Marcote, Pérez}
-\fancyhead[R]{\footnotesize Investigación Operativa}
-\fancyfoot[C]{\footnotesize \thepage}
+\fancyhead[L]{\footnotesize{Borghini, Lamelas Marcote, Pérez}}
+\fancyhead[R]{\footnotesize{Investigación Operativa}}
+\fancyfoot[C]{\footnotesize{\thepage}}
 
 
 %%---- Caratula -------------------------------------------------------------%%
@@ -69,7 +71,7 @@
 
 \newpage
 
-
+\normalsize
 \input{1_introduccion/introduccion}
 \newpage
 \input{2_explicacion/explicacion}
