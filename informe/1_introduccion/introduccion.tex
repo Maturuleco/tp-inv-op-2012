@@ -1,1 +1,35 @@
 \section{Introducción}
+
+\subsection{Esquema de los algoritmos}
+
+En este trabajo práctico se utiliza el software \emph{IBM\textsuperscript{\textregistered} ILOG\textsuperscript{\textregistered} CPLEX\textsuperscript{\textregistered}} como motor principal para desarrollar un $resolver$ de problemas lineales con variables enteras binarias (todas las variables del problema toman el valor $\in \{0,1\}$). Los problemas de este tipo suelen llamarse $MIP$s (\emph{Mixed Integer Problems}). En particular, en este trabajo, se utilizan tres tipo de técnicas diferentes para resolverlos:
+
+\begin{itemize}
+\item \emph{Branch \& Bound} ($BB$):\\
+Se resuelve la relajación lineal del MIP (es decir, se ignoran las condiciones de integralidad de las variables, asumiendo que vale tener variables fraccionarias). Se toma una variable $x_i$ fraccionaria con valor $x^*_i$ en la relajación. A partir de ella se desprenden dos subproblemas (\emph{branching}) que dejan fuera la posibilidad de asignar nuevamente $x^*_i$ a $x_i$. El primer subproblema es igual al resuelto agregando al restricción $x_i \leq \lfloor x^*_i \rfloor$. El segundo subproblema es igual al resuelto agregando la restricción $x_i \geq \lceil x^*_i \rceil$. A partir de estos dos problemas se repite el procedimiento hasta encontrar la mejor solución que cumpla las condiciones de integralidad o deducir que ésta no existe.
+
+\item \emph{Cut \& Branch} ($CB$):\\
+Es análogo al $BB$ pero al analizar por primera vez el MIP en vez de resolver y hacer $branching$, se obtiene la solución óptima de la relajación $x^*$ y se buscan planos de corte (nuevas restricciones que sean válidas para soluciones enteras del MIP pero dejen afuera la solución $x^*$). Si se encuentran, se vuelve a resolver el MIP original (esto hace que la nueva solución óptima sea diferente de $x^*$) y si la nueva solución óptima no es entera se buscan nuevamente planos de corte. Si no se encuentran (o si ya se encontraron varios planos de corte y es preferible hacer $branching$), comienza a subdividirse al MIP como en $BB$ hasta encontrar la solución óptima entera o deducir que no puede hallarse la misma.
+
+\item \emph{Branch \& Cut} ($BC$):\\
+Es análogo al $CB$ porque la primera vez que se resuelve el MIP también se usa la estrategia de los planos de corte. Sin embargo, a diferencia del $CB$, esta estrategia la utiliza también en los subproblemas originados gracias al $branching$. O sea, no importa si está resolviendo por primera vez el MIP o está resolviendo un subproblema derivado del mismo a través de una serie de $branching$s: siempre va a buscar planos de corte, y volver a resolver la relajación con los planos de corte agregados. Después de haber encontrado una cantidad de cortes igualmente se sigue haciendo $branching$ hasta encontrar la solución entera óptima o deducir que no existe.
+\end{itemize}
+
+Es necesario realizar una observación. Las tres técnicas continúan generando subproblemas hasta ``encontrar la mejor solución o deducir que ésta no existe". Lo que quiere decir esto es que a medida que se generan subproblemas puede o no encontrarse una solución entera válida. Si no se encuentra ninguna es porque no existe. Y, cuando existe una, para saber que es la óptima hay que terminar de resolver todos los subproblemas derivados del $branching$. Es decir, el espacio de búsqueda de la solución es ``muy grande'' porque hay que resolver todos los subproblemas derivados a partir del MIP original obligatoriamente (para comprobar la no existencia o la optimalidad).\\
+
+La idea en las tres téncicas es la misma siempre. Resolver un problema con un algoritmo aproximado (la relajación lineal) y continuamente tratar de mejorar la calidad de la solución encontrada hasta que cumpla condiciones de integralidad. El proceso de $branching$ deja afuera la solución fraccionaria encontrada porque parte la variable en dos zonas. El proceso de planos de corte también deja afuera la solución fraccionaria. Entonces, puede verse que con ambas estrategias el espacio de búsqueda de la solución va achicándose. Esta demostración intuitiva ayuda a comprender por qué eventualmente se llega a una solución entera válida.
+
+\newpage
+
+\subsection{Estrategias de Planos de Corte}
+
+Los algoritmos $CB$ y $BC$ usan ``planos de corte'' para encontrar restricciones que sean válidas para cualquier solución entera del MIP pero que no sean válidas para algunas soluciones fraccionarias (al menos, que no sea válida para la solución de la relajación). Esta estrategia tiene una velocidad de convergencia más lenta que el $BB$, pero la experiencia demuestra que la combinación de los planos de corte con el $branching$ suele dar mejor eficiencia para resolver un MIP que sólo con el $BB$. Por esta razón se agregan planos de corte en cada subproblema derivado del MIP y por esta razón igualmente se sigue haciendo branching. La línea que dibuja el límite en la relación entre la cantidad de planos de corte y la cantidad de $branching$ es bastante difusa y cada optimización tiene resultados distintos.\\
+
+Con respecto a los planos de corte, existen diversas formas de obtenerlos. En particular, en este trabajo, se utilizarán dos tipos:
+
+\begin{itemize}
+\item \emph{Cortes Cover}
+\item \emph{Cortes Clique}
+\end{itemize}
+
+En la próxima sección se eplican estos dos tipos de corte y brevemente se describen algunos detalles de implementación. Con ambos cortes explicados y las tres técnicas algorítmicas distintas, se mostrarán resultados obtenidos de correr una serie de casos de prueba con la implementación realizada. Finalmente, se intentarán sacar conclusiones o presentar observaciones acerca de los resultados, implementaciones y conceptos explicados.
