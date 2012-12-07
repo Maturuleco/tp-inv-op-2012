@@ -24,13 +24,15 @@ public:
 	void ingresarCantidadDeNodos(int);
 
 	// getters
+	bool sonVecinos(int,int,bool c=false,bool d=false) const;
 	bool grafoVacio() const;
 	bool cuantosCortes() const;
-	int particionarEnCliques(const vector<double>&,const vector<int>&,
-							 const vector<int>&,vector<int>&) const;
+	int cuantosEjes() const;
+	int particionarEnCliques(const vector<int>&,const vector<int>&,
+							 const vector<bool>&,vector<int>&) const;
 
 	// setters
-	void agregarEje(int,int);
+	void agregarEje(int,int,bool c=false, bool d=false);
 	void buscarEjesEnRestriccion(const vector<double>&,const vector<int>&,double);
 	int buscarConCliqueEnRestriccion(const vector<double>&,const vector<int>&,double);
 

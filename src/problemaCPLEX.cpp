@@ -503,15 +503,15 @@ bool estoyEnRaiz(CPXCENVptr env, void* cbdata, int wherefrom, int& estado)
 	estado = CPXgetcallbackinfo
 				(env, cbdata, wherefrom, CPX_CALLBACK_INFO_NODE_COUNT, &nroNodo);
 
-	if (estado){
+	if (estado)
 		fprintf(stderr,"Error al pedir informacion de nodo.\n");
-	}
 
 	return (nroNodo==0);
 } /* para saber si el callback vuelve de analizar al nodo raiz */
 
 
 int LIMITE_PARA_BRANCHING = 0;
+int LIMITE_PROCESAMIENTO_NODO = 0;
 
 
 static int CPXPUBLIC 
@@ -531,9 +531,11 @@ static int CPXPUBLIC
 		return estado;
 	}
 
-	if (LIMITE_PARA_BRANCHING > 10)
+	// no proceso un mismo nodo mas de 3 veces ni agrego mas de 10 cortes entre pasadas
+	if (LIMITE_PROCESAMIENTO_NODO > 3 or LIMITE_PARA_BRANCHING > 10)
 	{
 		LIMITE_PARA_BRANCHING = 0;
+		LIMITE_PROCESAMIENTO_NODO = 0;
 		return estado;
 	}
 
@@ -551,9 +553,9 @@ static int CPXPUBLIC
 	{
 		addcuts += (problema->agregarCortesCover
 					(env,cbdata,wherefrom,cbhandle, estado, x, tamanho));
-		if (estado){
+
+		if (estado)
 			return (estado);
-		}
 	}
 
 
@@ -561,7 +563,13 @@ static int CPXPUBLIC
 	if ( addcuts > 0 )
 	{
 		LIMITE_PARA_BRANCHING += addcuts;
+		LIMITE_PROCESAMIENTO_NODO += 1;
 		*useraction_p = CPX_CALLBACK_SET; 
+	}
+	else
+	{
+		LIMITE_PARA_BRANCHING = 0;
+		LIMITE_PROCESAMIENTO_NODO = 0;
 	}
 
 	return (estado);

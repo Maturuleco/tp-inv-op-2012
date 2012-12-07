@@ -261,7 +261,7 @@ bool Covers::resolverMochilaDinamica
 	int pesoExtra = maximo-minimo;
 
 	// me fijo si escala el algoritmo con limite 100
-	if ((pesoExtra > 100) or (minimo<0))
+	if ((pesoExtra > 100) or (minimo<0) or (minimo > maximo))
 	{
 		return false;
 	}
