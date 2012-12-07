@@ -1,0 +1,83 @@
+%%	SECCION documentclass													 %%
+%%---------------------------------------------------------------------------%%
+\documentclass[a4paper]{article}
+%%---------------------------------------------------------------------------%%
+%%	SECCION usepackage														 %%	
+%%---------------------------------------------------------------------------%%
+\usepackage{amsmath, amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{0_caratula/caratula}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{alltt}
+\usepackage[spanish]{babel} 
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage[utf8]{inputenc}
+\usepackage{fancyhdr}
+\usepackage{vmargin}
+
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0.4pt}
+\setmarginsrb
+{15mm}% left margin
+{10mm}% top margin
+{15mm}% right margin
+{10mm}% bottom margin
+{0mm}{10mm}{0mm}{10mm}% we needed -- related to headers and footers
+
+%\makeindex
+
+%%---------------------------------------------------------------------------%%
+%%	SECCION document	                                                     %%
+%%---------------------------------------------------------------------------%%
+\begin{document}
+
+\setcounter{page}{0}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyfoot{}
+\fancyhead[L]{\footnotesize Borghini, Lamelas Marcote, Pérez}
+\fancyhead[R]{\footnotesize Investigación Operativa}
+\fancyfoot[C]{\footnotesize \thepage}
+
+
+%%---- Caratula -------------------------------------------------------------%%
+\title{Investigación Operativa}
+\author{Matías Pérez\thanks{This is for making an acknowledgement.}
+\\Universidad de Buenos Aires, Argentina}
+\date{14 April, 2009}
+
+\materia{Investigación Operativa}
+\titulo{Trabajo Práctico}
+\subtitulo{Resolución de problemas lineales binarios.}
+\fecha{Diciembre 2012}
+
+
+\integrante{Fabrizio Borghini}{???/??}{fabriborghini@gmail.com}
+\integrante{Sebastián Rodrigo Lamelas Marcote}{153/08}{cobycobz@msn.com}
+\integrante{Matías Pérez}{002/05}{elmaildematiaz@gmail.com}
+%\grupo{}
+%\nombreGrupo{}
+%\resumen{}
+
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+
+\input{1_introduccion/introduccion}
+\newpage
+\input{2_explicacion/explicacion}
+\newpage
+\input{3_resultados/resultados}
+\newpage
+\input{4_conclusiones/conclusiones}
+\newpage
+\input{5_referencias/referencias}
+
+\end{document}
