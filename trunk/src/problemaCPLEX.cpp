@@ -261,8 +261,19 @@ void problemaCPLEX::mostrarSolucion()
 	// muestro informacion del arbol de branching
 	printf("Tiempo en Optimizar: %.3f [segs].\n",tiempoDeOptimizacion);
 	printf("Numero de nodos: %d.\n", numeroDeNodosDeOptimizacion);
-	printf("Cortes Cover Dynamic Agregados> %d\n", mochilas.cuantosDinamicos());
-	printf("Cortes Cover Greedy Agregados> %d\n", mochilas.cuantosGreedy());
+
+	// muestro informacion de cortes cover agregados
+	if (sePidieronCortesCover())
+	{
+		printf("Cortes Cover Dynamic Agregados> %d\n", mochilas.cuantosDinamicos());
+		printf("Cortes Cover Greedy Agregados> %d\n", mochilas.cuantosGreedy());
+	}
+
+	// muestro informacion de cortes clique agregados
+	if (sePidieronCortesClique())
+	{
+		printf("Cortes Clique Agregados> %d\n", grafoDeConflictos.cuantosCortes());
+	}
 } /* mostrar por stdout los resultados obtenidos */
 
 
