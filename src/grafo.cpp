@@ -1,12 +1,11 @@
 #include "grafo.hpp"
 
 // constructores ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Grafo::Grafo(): numeroNodos(0) {}
+Grafo::Grafo(): numeroNodos(0), numeroEjes(0), numeroCortes(0) {}
 
 
 void Grafo::ingresarCantidadDeNodos(int n)
 {
-	numeroEjes = 0;
 	numeroNodos = n;
 	vector<bool> p(2*numeroNodos, false);
 	graph.resize(2*numeroNodos, p);
@@ -18,6 +17,12 @@ bool Grafo::grafoVacio() const
 {
 	return (numeroEjes==0);
 } /* para saber si se usan cortes clique o no */
+
+
+bool Grafo::cuantosCortes() const
+{
+	return numeroCortes;
+} /* para saber cuantos cortes clique se agregaron */
 
 
 // armado de grafo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -116,7 +121,7 @@ int Grafo::buscarConCliqueEnRestriccion
 
 	// particionar en cliques
 	mergeSort(jotas, w_r);
-	vector<int> vEnClique(subnodos, 0);
+	vector<int> vEnClique(subnodos, subnodos+1);
 	nroCliques = particionarEnCliques(w_r, jotas, indices, vEnClique);
 
 	forn(i,subnodos)
@@ -193,8 +198,8 @@ int Grafo::buscarConCliqueEnRestriccion
 int Grafo::particionarEnCliques(const vector<double>& w_r,const vector<int>& jotas,
 								const vector<int>& indices, vector<int>& vEnClique) const
 {
-	// 'jotas' mapea i al indice en la restriccion (i -> w_r)
-	// 'indices' mapea i al indice en el grafo (w_r -> nodo real)
+	// 'jotas' mapea i al indice en la restriccion (i -> a_r)
+	// 'indices' mapea i al indice en el grafo (a_r -> nodo real)
 
 	int vars = w_r.size();
 	vector<bool> visitados(vars,false);
@@ -217,7 +222,7 @@ int Grafo::particionarEnCliques(const vector<double>& w_r,const vector<int>& jot
 		list<int> laClique;
 		laClique.push_back(i);	// 'laClique' contiene a 'i' y la voy a extender
 
-		forn(j,v)
+		rforn(j,i)
 		{
 			if (visitados[j])
 				continue;
@@ -230,7 +235,7 @@ int Grafo::particionarEnCliques(const vector<double>& w_r,const vector<int>& jot
 			// agrego al nodo 'u' si es vecino de todos los nodos que estan en 'enClique'
 			for (; enClique != laClique.end(); enClique++)
 			{
-				esVecino = graph[ indices[u] ][ indices[v] ];
+				esVecino = graph[ indices[u] ][ indices[ jotas[*enClique] ] ];
 
 				if (not esVecino)
 				{

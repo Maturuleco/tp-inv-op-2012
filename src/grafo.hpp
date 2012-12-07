@@ -25,6 +25,7 @@ public:
 
 	// getters
 	bool grafoVacio() const;
+	bool cuantosCortes() const;
 	int particionarEnCliques(const vector<double>&,const vector<int>&,
 							 const vector<int>&,vector<int>&) const;
 
@@ -44,6 +45,7 @@ private:
 
 	int numeroNodos;
 	int numeroEjes;
+	int numeroCortes;
 	vector< vector<bool> > graph;
 };
 
