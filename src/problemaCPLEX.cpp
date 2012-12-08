@@ -173,7 +173,8 @@ void problemaCPLEX::configuracion(bool bc, bool cb, bool cl, bool co)
 			return;
 		}
 	}
-
+	
+	
 	if (bc) {
 		tipo = BRANCH_AND_CUT;
 	} else {
@@ -336,6 +337,66 @@ bool problemaCPLEX::sePidieronCortesClique() const
 }
 
 
+int problemaCPLEX::agregarCortesClique
+	(CPXCENVptr env,void* cbdata,int wherefrom, void* cbhandle,
+	int& estado, const double* x, int tamanho)
+{
+	int cortesNuevos = 0;
+
+	// ordeno los valores de x* de menor a mayor
+	vector<double> ordX(tamanho,0.0);
+	vector<bool> agregados(tamanho, false);
+	vector<int> ordI(tamanho,0);
+	forn(i,tamanho)
+	{
+		ordX[i] = x[i];
+		ordI[i] = i;
+	}
+	mergeSort(ordI,ordX);
+
+	// por cada nodo busco una clique
+	rforn(i, tamanho)
+	{
+		if (agregados[i])
+			continue;
+
+		int nodo = ordI[i];
+		vector<double> corte;
+		vector<int> indices;
+		double rhs;
+		grafoDeConflictos.buscarClique(nodo, x, tamanho, corte, indices, rhs);
+		int nzcnt = corte.size();
+
+		if (nzcnt > 0)
+		{
+			double cutval[nzcnt];
+			int cutind[nzcnt];
+
+			for (int j = 0; j < nzcnt; j++)
+			{
+				cutval[j] = corte[j];
+				cutind[j] = indices[j];
+			}
+
+			estado = CPXcutcallbackadd(env, cbdata, wherefrom, nzcnt, rhs, 'L', 
+										cutind, cutval, CPX_USECUT_FORCE);
+
+			if (estado){
+				fprintf(stderr,"Falla en agregar corte cover.\n");
+				return 0;
+			}
+
+			forn(i,nzcnt)
+				agregados[indices[i]] = true;
+
+			cortesNuevos += 1;
+		}
+	}
+
+	return cortesNuevos;
+} /* busca cortes clique y devuelve cuantos agrego */
+
+
 
 /** PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
@@ -467,28 +528,35 @@ int problemaCPLEX::armarGrafoDeConflictos()
 		}
 	}
 
+	grafoDeConflictos.mostrar();
+	
+	cout << grafoDeConflictos.cuantosEjes() << endl;
+	cout << boolalpha << (grafoDeConflictos.cuantosEjes() == 0) << endl;
+
 	// si no encontre ejes con primera fase no puedo buscar en segunda fase
-	if (grafoDeConflictos.grafoVacio())
+	if (grafoDeConflictos.cuantosEjes() == 0)
 		return status;
+
 
 	// segunda fase de busqueda de ejes
 	while (true)
 	{
-		int ejesNuevos = 0;
+		int ejes = grafoDeConflictos.cuantosEjes();
 
 		for (int r = 0; r < numR; r++)
 		{
 			if (senses[r] == 'L')
 			{
-				ejesNuevos += grafoDeConflictos.buscarConCliqueEnRestriccion
+				grafoDeConflictos.buscarConCliqueEnRestriccion
 								(desigualdades[r],subindices[r],bes[r]);
 			}
 		}
 
-		if (ejesNuevos == 0)
+		if (grafoDeConflictos.cuantosEjes() - ejes == 0)
 			break;
 	}
 
+	cout << grafoDeConflictos.cuantosEjes() << endl;
 	return status;
 } /* armo grafo de conflictos y lo guardo */
 
@@ -558,6 +626,15 @@ static int CPXPUBLIC
 			return (estado);
 	}
 
+//// cortes cover
+	if (problema->sePidieronCortesClique())
+	{
+		addcuts += (problema->agregarCortesClique
+					(env,cbdata,wherefrom,cbhandle, estado, x, tamanho));
+		cout << "IRENE " << addcuts << "\t"<< flush;
+		if (estado)
+			return (estado);
+	}
 
 //// preparo salida avisandole a CPLEX si se crearon o no cortes
 	if ( addcuts > 0 )
