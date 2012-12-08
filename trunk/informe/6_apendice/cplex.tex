@@ -1,0 +1,62 @@
+\subsection{Interfaz con el CPLEX}
+
+{
+\vspace{5mm}
+\centering
+\includegraphics[scale=0.55]{6_apendice/cplex12.png}\\
+{\footnotesize \underline{Figura 6.1.1:} Logo de $CPLEX$ $v12$}\\
+\vspace{5mm}
+}
+
+En esta sección se explicará brevemente cómo utilizar la \emph{C Callable Library} del $CPLEX$ para integrarlo a un desarrollo de un software para resolver problemas lineales. La idea en este trabajo fue utilizar el lenguaje de programación $C^{++}$ para desarrollar módulos propios (para resolver problema de la mochila, merge sort, armar el grafo de conflictos, etc.) y combinarlo con la librería en $C$ que ofrece el $CPLEX$ para resolver el MIP. Es menester aclarar que para entender mejor el CPLEX y la breve explicación que se hará a continuación lo mejor es obtener los manuales de CPLEX y/o leer ejemplos de código que use las librerías $CPLEX$.\\
+
+En términos generales, primero se debe instanciar un \emph{entorno} CPLEX con la función \verb_CPXopenCPLEX_. Este proceso involucra una revisión de licencia del software, controlando el acceso al usuario por parte del $CPLEX$ y, en caso de que éste esté permitido, la instancia retiene la licencia hasta que el entorno sea liberado con la función \verb_CPXcloseCPLEX_ (o sea, no puede haber más de un entorno instanciado porque el entorno retiene la licencia). Lo bueno es que un mismo entorno puede tener varios problemas lineales (LP, MIP, etc). Para ``agregar'' un \emph{problema} al entorno se debe crear uno con la función \verb_CPXcreateprob_. Una vez creado, el mismo puede completarse con rutinas propias (y el llamado a funciones como \verb_CPXaddcols_, \verb_CPXaddrows_, \verb_CPXnewcols_, \verb_CPXnewrows_ o con funciones cuyo prefijo es \verb_CPXchg_) o leyendo una instancia de formato \verb_*.MPS_, \verb_*.SAV_ o \verb_*.LP_ con la función \verb_CPXreadcopyprob_. El problema puede llegar a ocupar mucha memoria, por lo tanto es recomendable liberarlo una vez que no se necesite con la función \verb_CPXfreeprob_.\\
+
+Uno de los roles que tiene el entorno es el monitoreo y control de una serie de parámetros que tiene el $CPLEX$ para saber cómo es la configuración del $resolver$ que el usuario desea programar. Por ejemplo, se pueden ajustar con parámetros las estrategias de selección de nodos y de selección de variables que se usarán durante la optimización de un problema MIP. También se puede introducir un tiempo máximo de corrida, o un número máximo de nodos a explorar, etc. Para esto se usan las funciones \verb_CPXsetintparam_, \verb_CPXsetdblparam_ o \verb_CPXsetstrparam_.\\
+
+Lo primero que uno debe hacer a la hora de usar las funciones de $CPLEX$ es acostumbrarse al uso omnipresente del parámetro \verb_status_ para el manejo de excepciones. $CPLEX$ a todo lo que hace lo califica con ``éxito'' o ``falla''. Para comunicar lo primero en líneas generales siempre devuelve \verb_status_ \textbf{igual a 0}. Muchas veces este parámetro se debe pasar por referencia ya que la función devuelve un resultado, otras veces lo que se pasa por referencia es lo que se desea obtener y el valor devuelto es el \verb_status_. Por ejemplo, \verb_CPXopenCPLEX_ devuelve cuando hay error un puntero a \verb_NULL_ y modificando por referencia a \verb_status_. Algunas veces no es necesario revistar \verb_status_, por ejemplo con la función \verb_CPXgetnumcols_. Es útil saber que ante un error se puede llamar a la función \verb_CPXgeterrorstring_ para obtener un string que explique con palabras la falla.\\
+
+Si el problema que se desea optimizar es un LP (todas variables $\in\Re$) entonces la rutina para resolver el problema es \verb_CPXlpopt_; y, una vez que termina, hay varias funciones que permiten conocer información acerca del resultado de la optimización (\verb_CPXgetobjval_ para obtener el valor del óptimo en la solución original, \verb_CPXgetstat_ para ver cómo terminó la optimización, \verb_CPXgetx_ para obtener los valores de las variables en el óptimo, etc).\\
+
+Si el problema que se desea optimizar es un MIP (al menos hay una variable que no debe tomar valores reales) entonces la rutina para resolver el problema es \verb_CPXmipopt_. $CPLEX$ usa la técnica algorítmica del \emph{Branch \& Cut}. Las funciones para conocer información sobre el resultado de la optimización son las mismas que para LP. $CPLEX$ infiere qué tipo de optimización se debe hacer a partir de información que agregue el usuario al completar el problema (con \verb_CPXcopyctype_) o a partir de información que está en el formato de la instancia leída. También puede se cambiar el tipo del problema con \verb_CPXchgprobtype_ (y luego \verb_CPXcopyctype_).\\
+
+Además, hay una gran cantidad de herramientas particulares que ofrece el $CPLEX$ (solution pools, goals, callbacks, etc). En particular, en este trabajo, se utilizaron únicamente los callbacks.\\
+
+Los callbacks son llamados a funciones hechas por el usuario en distintos momentos: preprocesamiento, una vez por iteración (en LP) o varias veces como antes de procesar un nodo en MIP. Las funciones callback son, en realidad, programadas por el usuario y es éste quien tiene que avisarle al $CPLEX$ que hay que hacer un callback a una rutina que él haya programado. Dentro del callback se puede obtener información del algoritmo de optimización, del nodo que se está procesando, etc. Hay varios tipos de callbacks:
+
+\begin{itemize}
+\item \underline{Informational:}\\
+Permite acceder a la información sobre el MIP, sin interferir en el espacio de búsqueda. Se asigna con la función \verb_CPXsetinfocallbackfunc_.
+
+\item \underline{Diagnostic:}\\
+Permite monitorear una optimización y opcionalmente terminarla, accediendo a más información que un callback Informational. Se asigna con \verb_CPXsetlpcallbackfunc_ o \verb_CPXsetmipcallbackfunc_.
+
+\item \underline{Control:}\\
+Permite controlar la búsqueda del Branch\&Cut en la optimización MIP. Se desarrolla en breve.
+\end{itemize}
+
+Los callback devuelven un \verb_int_ y debe ser 0 si el mismo fue exitoso o distinto de 0 si debe terminar la optimización.\\
+
+Los callback de control pueden ser de varios tipos (en el trabajo sólo se usa el Cut Callback):
+
+\begin{itemize}
+\item \underline{Node callback:}\\
+Para pedir información y elegir el próximo nodo. Se asigna con \verb_CPXsetnodecallbackfunc_.
+
+\item \underline{Solve callback:}\\
+Configura el optimizador. Se asigna con \verb_CPXsetsolvecallbackfunc_.
+
+\item \underline{Branch callback:}\\
+Para elegir la próxima variable de $branching$ en el nodo. Se asigna con la rutina \verb_CPXsetbranchcallbackfunc_.
+
+\item \underline{Incumbent callback:}\\
+Permite ver y llegar a rechazar soluciones ``incumbent'' (soluciones que cumplen condiciones de integralidad). Se asigna con \verb_CPXsetincumbentcallbackfunc_.
+
+\item \underline{Heuristic callback:}\\
+Permite generar una nueva solución heurísticamente a partir de la relajación del LP en cada nodo. Se asigna con \verb_CPXsetheuristiccallbackfunc_. Tiene el vector de soluciones como input y debe retornar una solución factible si la encuentra.\\
+Puede usar rutinas como \verb_CPXgetcallbackgloballb_ (cota inferior más ajustada), \verb_CPXgetcallbackglobalub_ (cota superior más ajustada), \verb_CPXgettcallbacknodelb_ y \verb_CPXgetcallbacknodeub_ (cotas del nodo); o funciones como \verb_CPXgetcallbackincumbent_ (devuelve la mejor solución factible actual), \verb_CPXgetcallbacklp_ (para obtener un puntero al problema MIP y acceder a información del problema).
+
+\item \underline{Cut callback:}\\
+Para añadir cortes específicos en cada nodo. Se asigna con \verb_CPXsetcutcallbackfunc_. Observar que el parámetro \verb'CPX_PARAM_MIPCBREDLP' debe estar en \verb"CPX_OFF" para agregar el corte al problema original.\\
+Puede usar rutinas como \verb_CPXgetcallbacknodex_ (obtiene solución de relajación del nodo), \verb_CPXcutcallbackadd_ (para agregar un corte al MIP) o \verb_CPXcutcallbackaddlocal_ (para agregar corte al subárbol del nodo actual).
+\end{itemize}
