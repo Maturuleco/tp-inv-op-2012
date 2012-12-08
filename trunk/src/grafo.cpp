@@ -7,15 +7,14 @@ Grafo::Grafo(): numeroNodos(0), numeroEjes(0), numeroCortes(0) {}
 void Grafo::ingresarCantidadDeNodos(int n)
 {
 	numeroNodos = n;
-	vector<bool> p(2*numeroNodos, false);
-	graph.resize(2*numeroNodos, p);
+	graph.resize(2*numeroNodos);
 } /* inicializacion de la matriz de adyacencia */
 
 
 // observadores ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 bool Grafo::grafoVacio() const
 {
-	return (numeroEjes==0);
+	return (numeroNodos==0);
 } /* para saber si se usan cortes clique o no */
 
 
@@ -36,9 +35,38 @@ bool Grafo::sonVecinos(int u,int v,bool uComplemento, bool vComplemento) const
 	u += (uComplemento)? numeroNodos : 0;
 	v += (vComplemento)? numeroNodos : 0;
 
-	return (graph[u][v] and graph[v][u]);
+	int elegido = v;
+	list<int>::const_iterator nb = graph[u].begin();
+	list<int>::const_iterator end = graph[u].end();
+
+	if (graph[u].size() > graph[v].size())
+	{
+		elegido = u;
+		nb = graph[v].begin();
+		end = graph[v].end();
+	}
+
+	for( ;nb != end; nb++)
+		if (elegido == *nb)
+			return true;
+
+	return false;		
 } /* para saber si los nodos 'u' y 'v' son vecinos */
 
+
+void Grafo::mostrar() const
+{
+	FILE* pepe = fopen("pepe.txt","w");
+	forn(i,2*numeroNodos){
+		list<int>::const_iterator nb = graph[i].begin(); 
+		list<int>::const_iterator end = graph[i].end();
+		for( ; nb != end; nb++){
+			fprintf(pepe,"%i ",*nb);
+		}
+		fprintf(pepe,"\n");
+	}
+	fclose(pepe);
+} /* para mostrar el grafo */
 
 // armado de grafo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void Grafo::agregarEje(int u,int v, bool uComplemento, bool vComplemento)
@@ -47,10 +75,11 @@ void Grafo::agregarEje(int u,int v, bool uComplemento, bool vComplemento)
 	v += (vComplemento)? numeroNodos : 0;
 
 	if (not sonVecinos(u,v))
+	{
+		graph[v].push_back(u);
+		graph[u].push_back(v);
 		numeroEjes += 1;
-
-	graph[u][v] = true;
-	graph[v][u] = true;
+	}	
 } /* agrega un eje al grafo */
 
 
@@ -64,6 +93,7 @@ void Grafo::buscarEjesEnRestriccion
 	double acum = 0.0;
 	double aux = 0.0;
 	double l_r = 0.0;
+
 
 	// prendo todas las negativas
 	forn(i,vars)
@@ -97,14 +127,14 @@ void Grafo::buscarEjesEnRestriccion
 			}
 		}
 	}
+	
 } /* para agregar ejes con el primer metodo */
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int Grafo::buscarConCliqueEnRestriccion
+void Grafo::buscarConCliqueEnRestriccion
 		(const vector<double>& a_r,const vector<int>& indices,double b)
 {
-	int ejesNuevos = 0;
 	int nroCliques = 0;
 	int subnodos = a_r.size();	// cantidad de nodos en G(U)
 	double acum = 0.0;			// guarda la suma de los coeficientes positivos
@@ -186,7 +216,6 @@ int Grafo::buscarConCliqueEnRestriccion
 		}
 	}
 
-	return ejesNuevos;
 } /* para agregar ejes con el segundo metodo */
 
 
@@ -245,9 +274,89 @@ int Grafo::particionarEnCliques(const vector<int>& jotas,const vector<int>& indi
 				vEnClique[u] = cliqueActual;
 			}
 		}
-
 		cliqueActual += 1;
 	}
 
 	return (cliqueActual+1);
 } /* particiona el grafo en cliques enumeradas desde 0 a 'cliqueActual-1' */
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void Grafo::buscarClique(int nodo,const double* x_opt,int vars,
+							vector<double>& corte,vector<int>& indices,double& rhs)
+{
+	list<int> clique;
+	clique.push_back(nodo);
+	int cVecinos = graph[nodo].size();
+
+	vector<double> pesoVecinos(cVecinos, 0.0);
+	vector<int> indVecinos(cVecinos, 0);
+	vector<int> vecinos(cVecinos, 0);
+	list<int>::const_iterator vecino = graph[nodo].begin();
+
+	// ordeno los vecinos por su valor en el optimo
+	for(int i = 0; i < cVecinos; vecino++, i++)
+	{
+		vecinos[i] = *vecino;
+		indVecinos[i] = i;
+		if (*vecino < numeroNodos)
+			pesoVecinos[i] = x_opt[*vecino];
+		else
+			pesoVecinos[i] = 1.0 - x_opt[*vecino- numeroNodos];
+	}
+	mergeSort(indVecinos, pesoVecinos);
+
+	list<int>::const_iterator enClique;
+
+	// armo la clique maximal agregando nodos vecinos a todos los de la clique
+	rforn(i,cVecinos)
+	{
+		int neighb = vecinos[ indVecinos[i] ];
+		bool vecinoDeTodos = true;
+
+		for(enClique = clique.begin(); enClique != clique.end(); enClique++)
+		{
+			if (not sonVecinos(neighb, *enClique))
+			{
+				vecinoDeTodos = false;
+				break;
+			}
+		}
+
+		if (vecinoDeTodos)
+			clique.push_back(neighb);
+	}
+
+	// me fijo si es un corte
+	double acum = 0.0;
+	int negativos = 0;
+	enClique = clique.begin();
+	vector<double> p(clique.size() ,0.0);
+	vector<int> q(clique.size(), 0);
+	for (int i = 0; enClique != clique.end(); enClique++, i++)
+	{
+		if (*enClique < numeroNodos)
+		{
+			acum += x_opt[*enClique];
+			p[i] = 1.0;
+			q[i] = *enClique;
+		}
+		else
+		{
+			acum += 1.0 - x_opt[*enClique - numeroNodos];
+			p[i] = -1.0;
+			q[i] = *enClique - numeroNodos;
+			negativos += 1;
+		}
+	}
+	
+	// si es un corte le aviso a la funcion que me llamo
+	if (acum > 1.0)
+	{
+		rhs = 1.0 - negativos;
+		corte = p;
+		indices = q;
+		numeroCortes += 1;
+	}
+
+} /* busca una clique maximal que contenga a 'nodo' */

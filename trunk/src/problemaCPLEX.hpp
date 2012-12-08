@@ -69,6 +69,7 @@ public:
 
 	// cortes clique
 	bool sePidieronCortesClique() const;
+	int agregarCortesClique(CPXCENVptr,void*,int,void*,int&,const double*,int);
 
 private:
 

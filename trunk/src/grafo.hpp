@@ -7,13 +7,6 @@
 
 #include "aux.hpp"
 
-
-// macros ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#define forn(i,n) for(int i = 0; i < (int)(n); i++)
-#define forkn(i,k,n) for(int i = (int)(k); i < (int)(n); i++)
-#define rforn(i,n) for(int i = (int)(n-1); i >= 0; i--)
-
-
 // definicion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class Grafo {
 
@@ -24,6 +17,7 @@ public:
 	void ingresarCantidadDeNodos(int);
 
 	// getters
+	void mostrar() const;
 	bool sonVecinos(int,int,bool c=false,bool d=false) const;
 	bool grafoVacio() const;
 	bool cuantosCortes() const;
@@ -34,21 +28,20 @@ public:
 	// setters
 	void agregarEje(int,int,bool c=false, bool d=false);
 	void buscarEjesEnRestriccion(const vector<double>&,const vector<int>&,double);
-	int buscarConCliqueEnRestriccion(const vector<double>&,const vector<int>&,double);
-
+	void buscarConCliqueEnRestriccion(const vector<double>&,const vector<int>&,double);
+	void buscarClique(int,const double*,int,vector<double>&,vector<int>&,double&);
 
 private:
 
 	/* ACLARACIONES:
 	 * - los nodos [0..n-1] son originales, los nodos [n..2*n-1] son complemento.
 	 * - no agregamos los ejes entre un nodo y su complemento.
-	 * - 'graph' es una matriz de adyacencia.
-	 */
+s	 */
 
 	int numeroNodos;
 	int numeroEjes;
 	int numeroCortes;
-	vector< vector<bool> > graph;
+	vector< list<int> > graph;
 };
 
 
