@@ -30,6 +30,22 @@ int Grafo::cuantosEjes() const
 } /* para saber cuantos ejes tiene el grafo */
 
 
+void Grafo::mostrar() const
+{
+	FILE* output = fopen("graph.txt","w");
+	fprintf(output,"%d nodos %d ejes\n", numeroNodos, numeroEjes);
+	forn(i,2*numeroNodos){
+		list<int>::const_iterator nb = graph[i].begin(); 
+		list<int>::const_iterator end = graph[i].end();
+		for( ; nb != end; nb++){
+			fprintf(output,"%i ",*nb);
+		}
+		fprintf(output,"\n");
+	}
+	fclose(output);
+} /* para mostrar el grafo */
+
+
 bool Grafo::sonVecinos(int u,int v,bool uComplemento, bool vComplemento) const
 {
 	u += (uComplemento)? numeroNodos : 0;
@@ -53,20 +69,6 @@ bool Grafo::sonVecinos(int u,int v,bool uComplemento, bool vComplemento) const
 	return false;		
 } /* para saber si los nodos 'u' y 'v' son vecinos */
 
-
-void Grafo::mostrar() const
-{
-	FILE* pepe = fopen("pepe.txt","w");
-	forn(i,2*numeroNodos){
-		list<int>::const_iterator nb = graph[i].begin(); 
-		list<int>::const_iterator end = graph[i].end();
-		for( ; nb != end; nb++){
-			fprintf(pepe,"%i ",*nb);
-		}
-		fprintf(pepe,"\n");
-	}
-	fclose(pepe);
-} /* para mostrar el grafo */
 
 // armado de grafo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void Grafo::agregarEje(int u,int v, bool uComplemento, bool vComplemento)

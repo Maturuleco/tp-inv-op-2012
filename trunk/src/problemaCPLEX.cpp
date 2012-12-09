@@ -37,6 +37,96 @@ problemaCPLEX::~problemaCPLEX()
 } /* destructor para liberar correctamente los recursos */
 
 
+// optimizacion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void problemaCPLEX::resolverMIP()
+{
+	tiempoDeOptimizacion = 0.0;
+	numeroDeNodosDeOptimizacion = 0;
+
+	double time_beg = 0.0;
+	double time_end = 0.0;
+
+	status = CPXgettime(env,&time_beg);
+	status = CPXmipopt (env, lp);
+	status = CPXgettime(env,&time_end);
+
+	numeroDeNodosDeOptimizacion = CPXgetnodecnt(env,lp);
+	tiempoDeOptimizacion = time_end - time_beg;
+
+	if ( status ) {
+		fprintf (stderr, "Failed to optimize MIP.\n");
+	}
+} /* le avisamos a CPLEX que busque el optimo */
+
+
+void problemaCPLEX::mostrarSolucion()
+{
+	double tolerancia = 1e-10;
+
+	// muestro que algoritmo se corrio
+	switch(tipo)
+	{
+		case BRANCH_AND_BOUND:
+			printf("Branch & Bound.\n");
+			break;
+		case BRANCH_AND_CUT:
+			printf("Branch & Cut.\n");
+			break;
+		case CUT_AND_BRANCH:
+			printf("Cut & Branch.\n");
+			break;
+	}
+
+	// muestro estado de la solucion
+	int solstat = CPXgetstat (env, lp);
+	char buffer[511];
+	CPXCHARptr statstring = CPXgetstatstring(env,solstat,buffer);
+	if (statstring == NULL)
+		printf("Error al pedir SOLUTION STATUS.\n");
+	else
+		printf ("Solution status: %s.\n",buffer);
+
+	// muestro funcional
+	double objVal = optimo();
+	printf ("Objective value: %.10g\n", objVal );
+
+	// muestro valores de las variables
+	int cur_numcols = numeroVariables();
+	double variables[cur_numcols];
+	for (int i = 0; i < cur_numcols; i++){
+		variables[i] = 0.0;
+	}
+	double * x = (double*)&variables;
+	status = CPXgetx (env, lp, x, 0, cur_numcols-1);
+	if ( status ) {
+		fprintf (stderr, "Failed to obtain solution.\n");
+		return;
+	}
+	for (int j = 0; j < cur_numcols; j++) {
+		if ( fabs (variables[j]) > tolerancia ) {
+			printf ( "Column %d:  Value = %17.10g\n", j, variables[j]);
+		}
+	}
+
+	// muestro informacion del arbol de branching
+	printf("Tiempo en Optimizar: %4.3f [segs].\n",tiempoDeOptimizacion);
+	printf("Numero de nodos: %d.\n", numeroDeNodosDeOptimizacion);
+
+	// muestro informacion de cortes cover agregados
+	if (sePidieronCortesCover())
+	{
+		printf("Cortes Cover Dynamic Agregados> %d\n", mochilas.cuantosDinamicos());
+		printf("Cortes Cover Greedy Agregados> %d\n", mochilas.cuantosGreedy());
+	}
+
+	// muestro informacion de cortes clique agregados
+	if (sePidieronCortesClique())
+	{
+		printf("Cortes Clique Agregados> %d\n", grafoDeConflictos.cuantosCortes());
+	}
+} /* mostrar por stdout los resultados obtenidos */
+
+
 // const ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 bool problemaCPLEX::hayError() const
 {
@@ -151,131 +241,98 @@ void problemaCPLEX::elegirEstrategiaDeSeleccionDeVariable()
 
 void problemaCPLEX::configuracion(bool bc, bool cb, bool cl, bool co)
 {
-	if ( not(bc or cb) or not(cl or co) ) {
+	// decido tecnica algoritmica
+	if ( not(bc or cb) or not(cl or co) )
+	{
 		/* branch and bound, no usa cortes */
 		return;
 	}
 
-	if (co)		/* cortes cover */
-	{
-		status = agregarMochilas();
-		if (status) {
-			fprintf(stderr,"Falla al preparar mochilas.\n");
-			return;
-		}
-	}
-
-	if (cl)		/* cortes clique */
-	{
-		status = armarGrafoDeConflictos();
-		if (status) {
-			fprintf(stderr,"Falla al armar grafo de conflictos.\n");
-			return;
-		}
-	}
-	
-	
-	if (bc) {
+	if (bc)
 		tipo = BRANCH_AND_CUT;
-	} else {
+	else
 		tipo = CUT_AND_BRANCH;
+
+	// preparo estructuras para cortes
+	if (co or cl)
+	{
+		// agarro informacion de restricciones del MIP
+		int numR = numeroRestricciones();
+		char senses[numR];
+		status = CPXgetsense(env, lp, senses, 0, numR-1);
+		if (status) { return; }
+
+		vector< vector<double> > desigualdades(numR);
+		vector< vector<int> > subindices(numR);
+		vector<double> bes(numR, 0.0);
+
+		for (int r = 0; r < numR; r++)
+		{
+			char sentido = senses[r];
+			if ((sentido == 'L') or (sentido == 'G'))
+			{
+				dameRestriccion(r, desigualdades[r], subindices[r]);
+				if (status) { return; }
+
+				bes[r] = dameRhs(r);
+				if (status) { return; }
+
+				if (sentido == 'G')
+				{
+					bes[r] = -1.0*bes[r];
+					for (int j = 0; j < desigualdades[r].size(); j++)
+					{
+						desigualdades[r][j] = -1.0 * desigualdades[r][j];
+					}
+					senses[r] = 'L';
+				}
+			}
+		}
+
+		// preprocesamiento necesario para cortes cover
+		if (co)
+			agregarMochilas(numR, senses, desigualdades, subindices, bes);
+
+		// preprocesamiento necesario para cortes clique
+		if (cl)
+			armarGrafoDeConflictos(numR, senses, desigualdades, subindices, bes);
 	}
 
+	// aviso a cplex informacion de cortes
 	status = CPXsetusercutcallbackfunc(env, planosDeCorte, this);
-	if (status) {
-		fprintf(stderr, "Falla en CPXsetcutcallbackfunc().\n");
+	if (status)
+	{
+		fprintf(stderr, "Falla en CPXsetusercutcallbackfunc().\n");
 	}
 } /* preparar los cortes y el algoritmo elegidos */
 
 
-// optimizacion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void problemaCPLEX::resolverMIP()
+// agregado de un corte ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+int problemaCPLEX::agregarCorte
+					(CPXCENVptr env, void* cbdata, int wherefrom, int& estado,
+					 const vector<double>& corte, const vector<int>& indice, double rhs)
 {
-	tiempoDeOptimizacion = 0.0;
-	numeroDeNodosDeOptimizacion = 0;
+	int nzcnt = corte.size();
 
-	double time_beg = 0.0;
-	double time_end = 0.0;
-
-	status = CPXgettime(env,&time_beg);
-	status = CPXmipopt (env, lp);
-	status = CPXgettime(env,&time_end);
-
-	numeroDeNodosDeOptimizacion = CPXgetnodecnt(env,lp);
-	tiempoDeOptimizacion = time_end - time_beg;
-
-	if ( status ) {
-		fprintf (stderr, "Failed to optimize MIP.\n");
-	}
-} /* le avisamos a CPLEX que busque el optimo */
-
-
-void problemaCPLEX::mostrarSolucion()
-{
-	double tolerancia = 1e-10;
-
-	// muestro que algoritmo se corrio
-	switch(tipo)
+	if (nzcnt > 0)
 	{
-		case BRANCH_AND_BOUND:
-			printf("Branch & Bound.\n");
-			break;
-		case BRANCH_AND_CUT:
-			printf("Branch & Cut.\n");
-			break;
-		case CUT_AND_BRANCH:
-			printf("Cut & Branch.\n");
-			break;
-	}
+		double cutval[nzcnt];
+		int cutind[nzcnt];
 
-	// muestro estado de la solucion
-	int solstat = CPXgetstat (env, lp);
-	char buffer[511];
-	CPXCHARptr statstring = CPXgetstatstring(env,solstat,buffer);
-	if (statstring == NULL)
-		printf("Error al pedir SOLUTION STATUS.\n");
-	else
-		printf ("Solution status: %s.\n",buffer);
-
-	// muestro funcional
-	double objVal = optimo();
-	printf ("Objective value: %.10g\n", objVal );
-
-	// muestro valores de las variables
-	int cur_numcols = numeroVariables();
-	double variables[cur_numcols];
-	for (int i = 0; i < cur_numcols; i++){
-		variables[i] = 0.0;
-	}
-	double * x = (double*)&variables;
-	status = CPXgetx (env, lp, x, 0, cur_numcols-1);
-	if ( status ) {
-		fprintf (stderr, "Failed to obtain solution.\n");
-		return;
-	}
-	for (int j = 0; j < cur_numcols; j++) {
-		if ( fabs (variables[j]) > tolerancia ) {
-			printf ( "Column %d:  Value = %17.10g\n", j, variables[j]);
+		for (int j = 0; j < nzcnt; j++)
+		{
+			cutval[j] = corte[j];
+			cutind[j] = indice[j];
 		}
+
+		estado = CPXcutcallbackadd(env, cbdata, wherefrom, nzcnt, rhs, 'L', 
+									cutind, cutval, CPX_USECUT_FORCE);
+
+		return 1;
 	}
 
-	// muestro informacion del arbol de branching
-	printf("Tiempo en Optimizar: %.3f [segs].\n",tiempoDeOptimizacion);
-	printf("Numero de nodos: %d.\n", numeroDeNodosDeOptimizacion);
-
-	// muestro informacion de cortes cover agregados
-	if (sePidieronCortesCover())
-	{
-		printf("Cortes Cover Dynamic Agregados> %d\n", mochilas.cuantosDinamicos());
-		printf("Cortes Cover Greedy Agregados> %d\n", mochilas.cuantosGreedy());
-	}
-
-	// muestro informacion de cortes clique agregados
-	if (sePidieronCortesClique())
-	{
-		printf("Cortes Clique Agregados> %d\n", grafoDeConflictos.cuantosCortes());
-	}
-} /* mostrar por stdout los resultados obtenidos */
+	return 0;
+} /* para agregar un corte encontrado con desigualdades cover o clique */
 
 
 // cortes covers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -286,42 +343,27 @@ bool problemaCPLEX::sePidieronCortesCover() const
 
 
 int problemaCPLEX::agregarCortesCover
-	(CPXCENVptr env,void* cbdata,int wherefrom, void* cbhandle,
-	int& estado, const double* x, int tamanho)
+	(CPXCENVptr env,void* cbdata,int wherefrom, int& estado, const double* x, int tamanho)
 {
 	int cortesNuevos = 0;
 	int restricciones = numeroRestricciones();
 
+	// trato de encontrar un cover en cada restriccion original del MIP
 	for (int r = 0; r < restricciones; r++)
 	{
 		if (mochilas.puedoBuscarEnRestriccion(r))
 		{
 			vector<double> corte;
-			vector<int> indices;
+			vector<int> indice;
 			double rhs;
-			mochilas.buscarCover(r, x, tamanho, corte, indices, rhs);
-			int nzcnt = corte.size();
+			mochilas.buscarCover(r, x, tamanho, corte, indice, rhs);
 
-			if (nzcnt > 0)
-			{
-				double cutval[nzcnt];
-				int cutind[nzcnt];
+			cortesNuevos += agregarCorte
+							(env, cbdata, wherefrom, estado, corte, indice, rhs);
 
-				for (int j = 0; j < nzcnt; j++)
-				{
-					cutval[j] = corte[j];
-					cutind[j] = indices[j];
-				}
-
-				estado = CPXcutcallbackadd(env, cbdata, wherefrom, nzcnt, rhs, 'L', 
-											cutind, cutval, CPX_USECUT_FORCE);
-
-				if (estado){
-					fprintf(stderr,"Falla en agregar corte cover.\n");
-					return 0;
-				}
-
-				cortesNuevos += 1;
+			if (estado){
+				fprintf(stderr,"Falla en agregar corte cover.\n");
+				return 0;
 			}
 		}
 	}
@@ -338,19 +380,22 @@ bool problemaCPLEX::sePidieronCortesClique() const
 
 
 int problemaCPLEX::agregarCortesClique
-	(CPXCENVptr env,void* cbdata,int wherefrom, void* cbhandle,
-	int& estado, const double* x, int tamanho)
+	(CPXCENVptr env,void* cbdata,int wherefrom, int& estado, const double* x, int tamanho)
 {
+
 	int cortesNuevos = 0;
+	int cortePorNodo = 0;
+	double acum = 0.0;
 
 	// ordeno los valores de x* de menor a mayor
-	vector<double> ordX(tamanho,0.0);
 	vector<bool> agregados(tamanho, false);
+	vector<double> ordX(tamanho,0.0);
 	vector<int> ordI(tamanho,0);
 	forn(i,tamanho)
 	{
 		ordX[i] = x[i];
 		ordI[i] = i;
+		acum += x[i];
 	}
 	mergeSort(ordI,ordX);
 
@@ -362,35 +407,31 @@ int problemaCPLEX::agregarCortesClique
 
 		int nodo = ordI[i];
 		vector<double> corte;
-		vector<int> indices;
+		vector<int> indice;
 		double rhs;
-		grafoDeConflictos.buscarClique(nodo, x, tamanho, corte, indices, rhs);
-		int nzcnt = corte.size();
+		grafoDeConflictos.buscarClique(nodo, x, tamanho, corte, indice, rhs);
 
-		if (nzcnt > 0)
+		cortePorNodo = agregarCorte
+						(env, cbdata, wherefrom, estado, corte, indice, rhs);
+
+		if (estado){
+			fprintf(stderr,"Falla en agregar corte cover.\n");
+			return 0;
+		}
+
+		if (cortePorNodo == 1)
 		{
-			double cutval[nzcnt];
-			int cutind[nzcnt];
-
-			for (int j = 0; j < nzcnt; j++)
+			forn(i, corte.size())
 			{
-				cutval[j] = corte[j];
-				cutind[j] = indices[j];
+				agregados[indice[i]] = true;
+				acum -= x[indice[i]];
 			}
-
-			estado = CPXcutcallbackadd(env, cbdata, wherefrom, nzcnt, rhs, 'L', 
-										cutind, cutval, CPX_USECUT_FORCE);
-
-			if (estado){
-				fprintf(stderr,"Falla en agregar corte cover.\n");
-				return 0;
-			}
-
-			forn(i,nzcnt)
-				agregados[indices[i]] = true;
 
 			cortesNuevos += 1;
 		}
+
+		if (acum < 0.5)
+			break;
 	}
 
 	return cortesNuevos;
@@ -407,7 +448,7 @@ void problemaCPLEX::dameRestriccion(int r, vector<double>& fila, vector<int>& in
 	int nzcnt, surplus;
 	status = CPXgetrows(env, lp, &nzcnt, rmatbeg, NULL, NULL, 0, &surplus, r, r);
 	if ( (status != CPXERR_NEGATIVE_SURPLUS) and (status != 0) ) {
-		fprintf(stderr,"Error al obtener la fila %d.\n",r);
+		fprintf(stderr,"Error al obtener parametros de la fila %d.\n",r);
 		return;
 	}
 
@@ -444,99 +485,50 @@ double problemaCPLEX::dameRhs(int r)
 
 
 // guardo restricciones en Covers ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int problemaCPLEX::agregarMochilas()
+void problemaCPLEX::agregarMochilas
+					(int numR,const char* senses, 
+					const vector< vector<double> >& desigualdades,
+					const vector< vector<int> >& subindices,
+					const vector<double>& bes)
 {
-	int numR = numeroRestricciones();
 	int numV = numeroVariables();
-	if (numV*numR == 0) { return 1; }
-
 	mochilas.reajustar(numR,numV);
-	char senses[numR];
-
-	status = CPXgetsense(env, lp, senses, 0, numR-1);
-	if (status) { return (status); }
 
 	for (int r = 0; r < numR; r++)
 	{
-		char sentido = senses[r];
-		if ((sentido == 'L') or (sentido == 'G'))
+		if (senses[r] == 'L')
 		{
-			vector<double> fila;
-			vector<int> indices;
-			dameRestriccion(r, fila, indices);
-			if (status) { return (status); }
-
-			double b = dameRhs(r);
-			if (status) { return (status); }
-
-			if (sentido == 'G')
-			{
-				b = -1.0*b;
-				for (int j = 0; j < fila.size(); j++)
-				{
-					fila[j] = -1.0*fila[j];
-				}
-			}
-			mochilas.agregarRestriccionesTraducidas(r, fila, indices, b);
+			mochilas.agregarRestriccionesTraducidas
+				(r, desigualdades[r], subindices[r], bes[r]);
 		}
 	}
 
-	return status;
 } /* traduzco restricciones a desigualdades mochila y las guardo */
 
 
 // preparo el grafo de conflictos ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-int problemaCPLEX::armarGrafoDeConflictos()
+void problemaCPLEX::armarGrafoDeConflictos
+					(int numR,const char* senses, 
+					const vector< vector<double> >& desigualdades,
+					const vector< vector<int> >& subindices,
+					const vector<double>& bes)
 {
-	int numR = numeroRestricciones();
 	int numV = numeroVariables();
-	if (numV*numR == 0) { return 1; }
-
 	grafoDeConflictos.ingresarCantidadDeNodos(numV);
-
-	char senses[numR];
-	status = CPXgetsense(env, lp, senses, 0, numR-1);
-	if (status) { return (status); }
-
-	vector< vector<double> > desigualdades(numR);
-	vector< vector<int> > subindices(numR);
-	vector<double> bes(numR, 0.0);
 
 	// primera fase de busqueda de ejes
 	for (int r = 0; r < numR; r++)
 	{
-		char sentido = senses[r];
-		if ((sentido == 'L') or (sentido == 'G'))
+		if (senses[r] == 'L')
 		{
-			dameRestriccion(r, desigualdades[r], subindices[r]);
-			if (status) { return (status); }
-
-			bes[r] = dameRhs(r);
-			if (status) { return (status); }
-
-			if (sentido == 'G')
-			{
-				bes[r] = -1.0*bes[r];
-				for (int j = 0; j < desigualdades[r].size(); j++)
-				{
-					desigualdades[r][j] = -1.0 * desigualdades[r][j];
-				}
-				senses[r] = 'L';
-			}
 			grafoDeConflictos.buscarEjesEnRestriccion
 				(desigualdades[r],subindices[r],bes[r]);
 		}
 	}
 
-	grafoDeConflictos.mostrar();
-	
-	cout << grafoDeConflictos.cuantosEjes() << endl;
-	cout << boolalpha << (grafoDeConflictos.cuantosEjes() == 0) << endl;
-
 	// si no encontre ejes con primera fase no puedo buscar en segunda fase
 	if (grafoDeConflictos.cuantosEjes() == 0)
-		return status;
-
+		return;
 
 	// segunda fase de busqueda de ejes
 	while (true)
@@ -555,9 +547,6 @@ int problemaCPLEX::armarGrafoDeConflictos()
 		if (grafoDeConflictos.cuantosEjes() - ejes == 0)
 			break;
 	}
-
-	cout << grafoDeConflictos.cuantosEjes() << endl;
-	return status;
 } /* armo grafo de conflictos y lo guardo */
 
 
@@ -620,18 +609,18 @@ static int CPXPUBLIC
 	if (problema->sePidieronCortesCover())
 	{
 		addcuts += (problema->agregarCortesCover
-					(env,cbdata,wherefrom,cbhandle, estado, x, tamanho));
+					(env, cbdata, wherefrom, estado, x, tamanho));
 
 		if (estado)
 			return (estado);
 	}
 
-//// cortes cover
+//// cortes clique
 	if (problema->sePidieronCortesClique())
 	{
 		addcuts += (problema->agregarCortesClique
-					(env,cbdata,wherefrom,cbhandle, estado, x, tamanho));
-		cout << "IRENE " << addcuts << "\t"<< flush;
+					(env, cbdata, wherefrom, estado, x, tamanho));
+
 		if (estado)
 			return (estado);
 	}

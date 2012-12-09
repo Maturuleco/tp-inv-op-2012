@@ -38,17 +38,16 @@ private:
 	bool resolverMochilaGreedy(int,const vector<double>&,vector<bool>&) const;
 	bool resolverMochilaDinamica(int,const vector<double>&,vector<bool>&) const;
 
-	int cant_restricciones;
 	int cant_variables;
-	int agregadas;
+	int cant_restricciones;
+	int coversGreedyAgregados;
+	int coversDinamicosAgregados;
+
 	vector< vector<double> > restricciones;	// guarda coeficientes no nulos
 	vector< vector<bool> > indicadores;		// indica si es una variable complemento
 	vector< vector<int> > indices;			// indica el indice de la variable
 	vector<bool> validas;					// dice si la la restriccion es usable
 	vector<double> rhs;						// guarda el rhs de la restriccion
-
-	int coversGreedyAgregados;
-	int coversDinamicosAgregados;
 };
 
 

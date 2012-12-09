@@ -41,7 +41,13 @@ int main(int argc, char **argv) {
 	problema.leerLP( archivoLP );
 	if ( levantaExcepcion(problema) ) { return 1; }
 
-	problema.setearTiempoMaximo(7200.0); 				/* 7200.0 segs = 2 hrs */
+	if (problema.numeroVariables() * problema.numeroRestricciones() == 0)
+	{
+		fprintf(stderr,"Error inesperado. No hay variables o restricciones.\n");
+		return 1;
+	}
+
+	problema.setearTiempoMaximo(3600.0); 				/* 3600.0 segs = 1 hr. */
 	if ( levantaExcepcion(problema) ) { return 1; }
 
 	problema.elegirEstrategiaDeSeleccionDeNodo(); 		/* se usa 'best-bound' */

@@ -36,7 +36,7 @@ private:
 	/* ACLARACIONES:
 	 * - los nodos [0..n-1] son originales, los nodos [n..2*n-1] son complemento.
 	 * - no agregamos los ejes entre un nodo y su complemento.
-s	 */
+	 */
 
 	int numeroNodos;
 	int numeroEjes;
