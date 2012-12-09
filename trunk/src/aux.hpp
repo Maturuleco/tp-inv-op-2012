@@ -25,7 +25,7 @@ using namespace std;
 
 // funciones ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void errorEnParametros();
-void mergeSort(vector<int>& jotas, vector<double>& base);
+void mergeSort(vector<int>&, vector<double>&);
 
 
 #endif // __AUX_H__

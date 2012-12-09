@@ -1,5 +1,7 @@
 #include "grafo.hpp"
 
+/** PUBLIC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
 // constructores ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Grafo::Grafo(): numeroNodos(0), numeroEjes(0), numeroCortes(0) {}
 
@@ -30,13 +32,25 @@ int Grafo::cuantosEjes() const
 } /* para saber cuantos ejes tiene el grafo */
 
 
+int Grafo::gradoDeNodo(int nodo) const
+{
+	return graph[nodo].size();
+} /* para saber cuantos vecinos tiene un nodo */
+
+
+const list<int>& Grafo::vecinosDeNodo(int nodo) const
+{
+	return graph[nodo];
+} /* para saber quienes son los vecinos de un nodo */
+
+
 void Grafo::mostrar() const
 {
 	FILE* output = fopen("graph.txt","w");
 	fprintf(output,"%d nodos %d ejes\n", numeroNodos, numeroEjes);
 	forn(i,2*numeroNodos){
-		list<int>::const_iterator nb = graph[i].begin(); 
-		list<int>::const_iterator end = graph[i].end();
+		list<int>::const_iterator nb = vecinosDeNodo(i).begin(); 
+		list<int>::const_iterator end = vecinosDeNodo(i).end();
 		for( ; nb != end; nb++){
 			fprintf(output,"%i ",*nb);
 		}
@@ -52,17 +66,17 @@ bool Grafo::sonVecinos(int u,int v,bool uComplemento, bool vComplemento) const
 	v += (vComplemento)? numeroNodos : 0;
 
 	int elegido = v;
-	list<int>::const_iterator nb = graph[u].begin();
-	list<int>::const_iterator end = graph[u].end();
+	list<int>::const_iterator nb = vecinosDeNodo(u).begin();
+	list<int>::const_iterator end = vecinosDeNodo(u).end();
 
-	if (graph[u].size() > graph[v].size())
+	if (gradoDeNodo(u) > gradoDeNodo(v))
 	{
 		elegido = u;
-		nb = graph[v].begin();
-		end = graph[v].end();
+		nb = vecinosDeNodo(v).begin();
+		end = vecinosDeNodo(v).end();
 	}
 
-	for( ;nb != end; nb++)
+	for(; nb != end; nb++)
 		if (elegido == *nb)
 			return true;
 
@@ -228,54 +242,47 @@ int Grafo::particionarEnCliques(const vector<int>& jotas,const vector<int>& indi
 	// 'jotas' mapea i al indice en la restriccion (i -> a_r)
 	// 'indices' mapea i al indice en el grafo (a_r -> nodo real)
 
-	int v = 0;	// i
-	int u = 0;	// j
-	int w = 0;	// k
+	int v = 0;
+	int v_real = 0;
+	int u = 0;
+	int u_real = 0;
 	int cliqueActual = 0;
 	int vars = jotas.size();
 	vector<bool> visitados(vars,false);
 	bool vecinoDeTodos = false;
 	bool esVecino = false;
 
+	// inicio cada clique
 	rforn(i,vars)
 	{
 		if (visitados[i])
 			continue;
 
-		v = jotas[i];
-		visitados[i] = true;
+		list<int> laClique;
 
+		v = jotas[i];
+		v_real = (cEnGdeU[v])? (indices[v] + numeroNodos) : (indices[v]);
+		visitados[i] = true;
+		laClique.push_back(v_real);
 		vEnClique[v] = cliqueActual;
 
-		list<int> laClique;
-		laClique.push_back(i);	// 'laClique' contiene a 'i' y la voy a extender
-
+		// extiendo clique
 		rforn(j,i)
 		{
 			if (visitados[j])
 				continue;
 
 			u = jotas[j];
-			vecinoDeTodos = true;
+			u_real = (cEnGdeU[u])? (indices[u] + numeroNodos) : (indices[u]);
 
-			// agrego al nodo 'u' si es vecino de todos los nodos que estan en 'laClique'
-			for (list<int>::iterator k = laClique.begin(); k != laClique.end(); k++)
-			{
-				w = jotas[*k];
-				if (not sonVecinos(indices[u], indices[w], cEnGdeU[u], cEnGdeU[w]))
-				{
-					vecinoDeTodos = false;
-					break;
-				}
-			}
-
-			if (vecinoDeTodos)
+			if (nodoExtiendeClique(u_real,laClique))
 			{
 				visitados[j] = true;
-				laClique.push_back(j);
+				laClique.push_back(u_real);
 				vEnClique[u] = cliqueActual;
 			}
 		}
+
 		cliqueActual += 1;
 	}
 
@@ -289,12 +296,12 @@ void Grafo::buscarClique(int nodo,const double* x_opt,int vars,
 {
 	list<int> clique;
 	clique.push_back(nodo);
-	int cVecinos = graph[nodo].size();
+	int cVecinos = gradoDeNodo(nodo);
 
 	vector<double> pesoVecinos(cVecinos, 0.0);
 	vector<int> indVecinos(cVecinos, 0);
 	vector<int> vecinos(cVecinos, 0);
-	list<int>::const_iterator vecino = graph[nodo].begin();
+	list<int>::const_iterator vecino = vecinosDeNodo(nodo).begin();
 
 	// ordeno los vecinos por su valor en el optimo
 	for(int i = 0; i < cVecinos; vecino++, i++)
@@ -308,46 +315,33 @@ void Grafo::buscarClique(int nodo,const double* x_opt,int vars,
 	}
 	mergeSort(indVecinos, pesoVecinos);
 
-	list<int>::const_iterator enClique;
-
 	// armo la clique maximal agregando nodos vecinos a todos los de la clique
 	rforn(i,cVecinos)
 	{
 		int neighb = vecinos[ indVecinos[i] ];
-		bool vecinoDeTodos = true;
-
-		for(enClique = clique.begin(); enClique != clique.end(); enClique++)
-		{
-			if (not sonVecinos(neighb, *enClique))
-			{
-				vecinoDeTodos = false;
-				break;
-			}
-		}
-
-		if (vecinoDeTodos)
+		if (nodoExtiendeClique(neighb,clique))
 			clique.push_back(neighb);
 	}
 
 	// me fijo si es un corte
 	double acum = 0.0;
 	int negativos = 0;
-	enClique = clique.begin();
-	vector<double> p(clique.size() ,0.0);
-	vector<int> q(clique.size(), 0);
+	list<int>::const_iterator enClique = clique.begin();
+	vector<double> corteBis(clique.size() ,0.0);
+	vector<int> indicesBis(clique.size(), 0);
 	for (int i = 0; enClique != clique.end(); enClique++, i++)
 	{
 		if (*enClique < numeroNodos)
 		{
 			acum += x_opt[*enClique];
-			p[i] = 1.0;
-			q[i] = *enClique;
+			corteBis[i] = 1.0;
+			indicesBis[i] = *enClique;
 		}
 		else
 		{
 			acum += 1.0 - x_opt[*enClique - numeroNodos];
-			p[i] = -1.0;
-			q[i] = *enClique - numeroNodos;
+			corteBis[i] = -1.0;
+			indicesBis[i] = *enClique - numeroNodos;
 			negativos += 1;
 		}
 	}
@@ -356,9 +350,26 @@ void Grafo::buscarClique(int nodo,const double* x_opt,int vars,
 	if (acum > 1.0)
 	{
 		rhs = 1.0 - negativos;
-		corte = p;
-		indices = q;
+		corte = corteBis;
+		indices = indicesBis;
 		numeroCortes += 1;
 	}
 
 } /* busca una clique maximal que contenga a 'nodo' */
+
+
+
+/** PRIVATE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+bool Grafo::nodoExtiendeClique(int nodo, const list<int>& clique) const
+{
+	list<int>::const_iterator nb = clique.begin();
+	list<int>::const_iterator fin = clique.end();
+
+	for(; nb != fin; nb++)
+		if (not sonVecinos(nodo,*nb))
+			return false;
+
+	return true;
+}

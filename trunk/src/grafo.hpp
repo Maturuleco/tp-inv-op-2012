@@ -22,6 +22,8 @@ public:
 	bool grafoVacio() const;
 	bool cuantosCortes() const;
 	int cuantosEjes() const;
+	int gradoDeNodo(int) const;
+	const list<int>& vecinosDeNodo(int) const;
 	int particionarEnCliques(const vector<int>&,const vector<int>&,
 							 const vector<bool>&,vector<int>&) const;
 
@@ -32,6 +34,8 @@ public:
 	void buscarClique(int,const double*,int,vector<double>&,vector<int>&,double&);
 
 private:
+
+	bool nodoExtiendeClique(int, const list<int>&) const;
 
 	/* ACLARACIONES:
 	 * - los nodos [0..n-1] son originales, los nodos [n..2*n-1] son complemento.

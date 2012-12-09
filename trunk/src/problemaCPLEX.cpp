@@ -421,10 +421,10 @@ int problemaCPLEX::agregarCortesClique
 
 		if (cortePorNodo == 1)
 		{
-			forn(i, corte.size())
+			forn(k, corte.size())
 			{
-				agregados[indice[i]] = true;
-				acum -= x[indice[i]];
+				agregados[indice[k]] = true;
+				acum -= x[indice[k]];
 			}
 
 			cortesNuevos += 1;
@@ -615,6 +615,7 @@ static int CPXPUBLIC
 			return (estado);
 	}
 
+
 //// cortes clique
 	if (problema->sePidieronCortesClique())
 	{
@@ -624,6 +625,7 @@ static int CPXPUBLIC
 		if (estado)
 			return (estado);
 	}
+
 
 //// preparo salida avisandole a CPLEX si se crearon o no cortes
 	if ( addcuts > 0 )
