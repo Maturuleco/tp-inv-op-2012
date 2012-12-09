@@ -63,23 +63,31 @@ public:
 	void mostrarSolucion();
 	void resolverMIP();
 
+	// agregado de cortes
+	int agregarCorte(CPXCENVptr, void*, int, int&,
+					  const vector<double>&, const vector<int>&, double rhs);
+
 	// cortes cover
 	bool sePidieronCortesCover() const;
-	int agregarCortesCover(CPXCENVptr,void*,int,void*,int&,const double*,int);
+	int agregarCortesCover(CPXCENVptr,void*,int,int&,const double*,int);
 
 	// cortes clique
 	bool sePidieronCortesClique() const;
-	int agregarCortesClique(CPXCENVptr,void*,int,void*,int&,const double*,int);
+	int agregarCortesClique(CPXCENVptr,void*,int,int&,const double*,int);
 
 private:
 
-	// preparacion de cortes cover (pre optimizacion)
+	// para leer restriccion del MIP
 	void dameRestriccion(int, vector<double>&, vector<int>&);
 	double dameRhs(int);
-	int agregarMochilas();
+
+	// preparacion de cortes cover (pre optimizacion)
+	void agregarMochilas(int,const char*, const vector< vector<double> >&,
+						const vector< vector<int> >&, const vector<double>&);
 
 	// preparacion cortes clique (pre optimizacion)
-	int armarGrafoDeConflictos();
+	void armarGrafoDeConflictos(int,const char*, const vector< vector<double> >&,
+							   const vector< vector<int> >&, const vector<double>&);
 
 	// representacion interna
 	double tiempoDeOptimizacion;		/* tiempo de CPXmipopt */

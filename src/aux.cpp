@@ -1,5 +1,6 @@
 #include "aux.hpp"
 
+
 // ayuda para usuario ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void errorEnParametros() {
     cout << "\nUSE>\t./resolucion [instancia] [tipo] [cortes]\n\n";

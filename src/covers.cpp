@@ -5,29 +5,30 @@
 // constructor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Covers::Covers()
 {
+	cant_variables = 0;
+	cant_restricciones = 0;
 	coversGreedyAgregados = 0;
 	coversDinamicosAgregados = 0;
-	agregadas = 0;
 } /* declaracion */
 
 
 void Covers::reajustar(int cantRestricciones, int cantVariables)
 {
-	cant_restricciones = cantRestricciones;
 	cant_variables = cantVariables;
-	restricciones.resize(cant_restricciones);
-	indicadores.resize(cant_restricciones);
-	indices.resize(cant_restricciones);
-	rhs.resize(cant_restricciones,0.0);
-	validas.resize(cant_restricciones,false);
+	cant_restricciones = cantRestricciones;
+	validas.resize(cantRestricciones,false);
+	restricciones.resize(cantRestricciones);
+	indicadores.resize(cantRestricciones);
+	indices.resize(cantRestricciones);
+	rhs.resize(cantRestricciones,0.0);
 } /* inicializacion una vez declarado */
 
 
 // observadores ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 bool Covers::estaVacio() const
 {
-	return ( agregadas == 0 );
-} /* para saber si se van a usar o no Cortes Cover, si no se agrego nada no se usa */
+	return ( (numeroRestricciones() * numeroVariables()) == 0 );
+} /* para saber si se van a usar o no Cortes Cover */
 
 
 int Covers::numeroRestricciones() const
@@ -79,13 +80,12 @@ void Covers::agregarRestriccionesTraducidas
 	{
 		double a_rj = vec[j];
 		indices[r][j] = ind[j];
-		restricciones[r][j] = a_rj;
+		restricciones[r][j] = fabs(a_rj);
 
-		if (a_rj < 0)
+		if (a_rj < 0.0)
 		{
 			acum += fabs(a_rj);
 			indicadores[r][j] = true;
-			restricciones[r][j] = fabs(a_rj);
 		}
 
 		if (minCoef > fabs(a_rj))
@@ -104,7 +104,6 @@ void Covers::agregarRestriccionesTraducidas
 	}
 
 	validas[r] = true;
-	agregadas += 1;
 } /* toma la r-esima restriccion original, la traduce a desigualdad mochila y la guarda */
 
 
