@@ -130,7 +130,7 @@ void Grafo::buscarEjesEnRestriccion
 				aux -= a_r[j];
 
 			// todas las combinaciones para prender y apagar
-			forn(k,3)
+			forn(k,4)
 			{
 				v_i = k % 2 ; 	/* 0 1 0 1 */
 				v_j = k / 2 ; 	/* 0 0 1 1 */
@@ -143,7 +143,7 @@ void Grafo::buscarEjesEnRestriccion
 			}
 		}
 	}
-	
+
 } /* para agregar ejes con el primer metodo */
 
 
@@ -186,7 +186,7 @@ void Grafo::buscarConCliqueEnRestriccion
 		forkn(j,i+1,subnodos)
 		{
 			// todas las combinaciones para prender y apagar
-			forn(k,3)
+			forn(k,4)
 			{
 				int v_i = k % 2 ; 	/* 0 1 0 1 */
 				int v_j = k / 2 ; 	/* 0 0 1 1 */
@@ -326,9 +326,9 @@ void Grafo::buscarClique(int nodo,const double* x_opt,int vars,
 	// me fijo si es un corte
 	double acum = 0.0;
 	int negativos = 0;
-	list<int>::const_iterator enClique = clique.begin();
-	vector<double> corteBis(clique.size() ,0.0);
 	vector<int> indicesBis(clique.size(), 0);
+	vector<double> corteBis(clique.size() ,0.0);
+	list<int>::const_iterator enClique = clique.begin();
 	for (int i = 0; enClique != clique.end(); enClique++, i++)
 	{
 		if (*enClique < numeroNodos)
