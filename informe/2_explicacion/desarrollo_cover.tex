@@ -1,1 +1,164 @@
 \subsubsection{Cortes Cover: Explicación Teórica}
+
+\subsubsection*{Definicion}
+Una ``desigualdad mochila'' es una desigualdad con $a_j \geq 0$ ($1\leq j \leq n$) de la forma:
+
+$$ \overset{n}{\underset{j=1}{\sum}} a_j\,x_j \leq b$$
+
+En este ipo de desigualdades se pude buscar un ``cover''. Es decir, un conjunto $C \subseteq \{1,...,n\}$ de índices tales que:
+
+$$ \overset{}{\underset{j \in C}{\sum}} a_j\,x_j > b$$
+
+Si se encuentra el mismo, entonces se obtiene una nueva ``desigualdad cover'' válida:
+
+$$ \overset{}{\underset{j \in C}{\sum}} x_j \leq |C| - 1$$
+
+Donde $|C|$ es el cardinal del cover $C$ encontrado.
+
+\subsubsection*{Corte Cover}
+
+Un ``corte cover'', entonces, consiste en encontrar una desigualdad cover válida para toda solución entera del MIP pero que deje afuera soluciones fraccionarias. La idea es recibir una solución óptima de la relajación de un nodo $x^*$ como input y a partir de ella fabricar una desigualdad cover violada por $x^*$:\\
+
+{
+\centering
+\begin{tabular}{c l}
+\verb_INPUT_ & $x^*$\\
+\verb_OUTPUT_ & Desigualdad cover violada por $x^*$\\
+\end{tabular}\\
+\vspace{5mm}
+}
+
+Para encontrar el corte cover en este trabajo se siguen los siguientes pasos:
+
+\begin{enumerate}
+\item Tomar una restricción original del MIP.
+\item Traducirla a desigualdad mochila.
+\item Búsqueda del cover.
+\item Extensión del cover.
+\item Reescribir el cover en función de variables originales.
+\end{enumerate}
+
+A continuación, la explicación detallada de cada paso.
+\newpage
+
+\begin{enumerate}
+\item \underline{Tomar una restricción original del MIP:}\\
+Cualquier restricción de la forma:
+$$\overset{n}{\underset{j=1}{\sum}} a_j\;x_j \leq b$$
+
+O, alternativamente, tomar una restricción de la siguiente forma:
+$$\overset{n}{\underset{j=1}{\sum}} a_j\;x_j \geq b$$
+
+Y multpilicar ambos lados por $-1$ para tener la forma de la primera inecuación (con ``$\leq$'').
+
+\item \underline{Traducirla a desigualdad mochila:}\\
+Con el conocimiento que las variables son binarias ($x_j\in\{0,1\}$) el primer paso consiste en traducir cada restricción original (con ``$\leq$'') del MIP en una desigualdad mochila. Sean los conjuntos:
+
+$$N_+ = \{j: a_j > 0 \;\;\forall j\;\; 1\leq j \leq n\}$$
+$$N_- = \{j: a_j < 0 \;\;\forall j\;\; 1\leq j \leq n\}$$
+
+Y usando el cambio de variables:
+
+$$x_j + \bar{x}_j = 1$$
+
+Se puede hacer una traducción de la siguiente forma:
+
+$$\overset{n}{\underset{j=1}{\sum}} a_j\;x_j \leq b$$
+$$\Leftrightarrow$$
+$$\overset{}{\underset{j \in N_+}{\sum}} a_j\;x_j - \overset{}{\underset{j \in N_-}{\sum}} |a_j|\;x_j \leq b$$
+$$\Leftrightarrow$$
+$$\overset{}{\underset{j \in N_+}{\sum}} a_j\;x_j - \overset{}{\underset{j \in N_-}{\sum}} |a_j|\;(1-\bar{x}_j) \leq b$$
+$$\Leftrightarrow$$
+$$\overset{}{\underset{j \in N_+}{\sum}} a_j\;x_j + \overset{}{\underset{j \in N_-}{\sum}} |a_j|\;\bar{x}_j \leq b + \overset{}{\underset{j \in N_-}{\sum}} |a_j|$$
+
+De esta forma, en el caso de restricciones con variables binarias, cualquier inecuación puede traducirse a desigualdad mochila:
+
+{
+\centering
+\begin{tabular}{p{4cm}p{4cm}p{4cm}}
+$\overset{}{\underset{j \in N_+ \cup N_-}{\sum}} |a_j|\;\tilde{x}_j \leq \tilde{b}$
+&
+$\tilde{b} = b + \overset{}{\underset{j \in N_-}{\sum}} |a_j|$
+&
+$\tilde{x}_j = 
+\begin{cases}
+x_j & \text{ si } j \in N_+\\
+\bar{x}_j & \text{ si } j \in N_-\\
+\end{cases}$\\
+\end{tabular}\\
+\vspace{5mm}
+}
+
+\item \underline{Búsqueda del cover:}\\
+Dada $x^*$ con $0\leq x_j \leq 1$ ($1\leq j \leq n$) solución óptima de la relajación, se busca un cover $C\subseteq \{1,...,n\}$ tal que:
+
+{
+\centering
+\begin{tabular}{ccc}
+$\overset{}{\underset{j \in C}{\sum}} x^*_j > |C|-1$ & y & $\overset{}{\underset{j \in C}{\sum}} \lfloor \tilde{a}_j \rfloor > \lceil \tilde{b} \rceil$\\
+\end{tabular}\\
+\vspace{5mm}
+}
+
+Este cover $C$ puede encontrarse resolviendo el MIP:
+
+{
+\centering
+\begin{tabular}{rl}
+minimizar & $\overset{n}{\underset{j=1}{\sum}} (1 - x^*_j) y_j$\\
+sujeto a&\\
+&$\overset{n}{\underset{j=1}{\sum}} \lfloor \tilde{a}_j \rfloor y_j \geq \lceil \tilde{b} \rceil + 1$\\
+&$y_j \in \{0,1\}$\\
+\end{tabular}\\
+\vspace{5mm}
+}
+
+Si el funcional es mayor o igual a 1, no existe un cover violado por $x^*$. Si se encuentra $y^*$ tal que el valor del óptimo es menor a 1, los valores de $y^*$ hacen un cover violado. Sea $G=\{j: y^*_j = 1\}$ ($G$ es el cover $C$ buscado):
+
+{
+\centering
+\begin{tabular}{cc}
+$\overset{}{\underset{j \in G}{\sum}} \tilde{x}_j \leq |G|-1$ & $(< \overset{}{\underset{j \in G}{\sum}} x^*_j)$\\
+\end{tabular}\\
+\vspace{5mm}
+}
+
+Esta desigualdad es válida porque como muestra el MIP que la encuentra, es una violación a la restricción original del problema; y, además, la desigualdad válida es un plano de corte porque al agregarla se descarta la solución óptima $x^*$ ya que ésta viola el cover encontrado.
+
+\item \underline{Extensión del cover:}
+
+Una vez obtenido el cover $G$:
+
+$$\overset{}{\underset{j \in G}{\sum}} \tilde{x}_j \leq |G|-1$$
+
+Se puede extender de la siguiente forma:
+
+$$E(G) = G \cup \{j: \tilde{a}_j \geq \tilde{a}_k \;\;\forall k\;\; \in G\}$$
+
+Y queda el cover extendido:
+
+$$\overset{}{\underset{j \in E(G)}{\sum}} \tilde{x}_j \leq |G|-1$$
+
+\item \underline{Reescribir el cover en función de variables originales:}\\
+Una vez que se consiguió un cover hay que recuperar las variables originales usando el reemplazo:
+
+$$\tilde{x}_j = 
+\begin{cases}
+x_j & \text{ si } j \in N_+\\
+1-x_j & \text{ si } j \in N_-\\
+\end{cases}$$
+
+Entonces:
+
+$$\overset{}{\underset{j \in E(G)}{\sum}} \tilde{x}_j \leq |G| - 1$$
+$$\Leftrightarrow$$
+$$\overset{}{\underset{j \in E(G)\cap N_+}{\sum}}x_j + \overset{}{\underset{j \in E(G)\cap N_-}{\sum}} (1-x_j) \leq |G|-1$$
+
+El cover quedará finalmente:
+
+$$\overset{}{\underset{j\in E(G)}{\sum}} \tilde{x}_j \leq |G|-1$$
+$$\Leftrightarrow$$
+$$\overset{}{\underset{j\in E(G)\cap N_+}{\sum}} x_j - \overset{}{\underset{j \in E(G)\cap N_-}{\sum}} x_j \leq |G| - h -1$$
+
+Con $h = |E(G)\cap N_-|$.
+\end{enumerate}
