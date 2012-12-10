@@ -52,10 +52,10 @@ $$\overset{n}{\underset{j=1}{\sum}} a_j\;x_j \geq b$$
 Y multpilicar ambos lados por $-1$ para tener la forma de la primera inecuación (con ``$\leq$'').
 
 \item \underline{Traducirla a desigualdad mochila:}\\
-Con el conocimiento que las variables son binarias ($x_j\in\{0,1\}$) el primer paso consiste en traducir cada restricción original (con ``$\leq$'') del MIP en una desigualdad mochila. Sean los conjuntos:
+Con el conocimiento que las variables son binarias ($x_j\in\{0,1\}$) el próximo paso consiste en traducir cada restricción original (con ``$\leq$'') del MIP en una desigualdad mochila. Sean los conjuntos:
 
-$$N_+ = \{j: a_j > 0 \;\;\forall j\;\; 1\leq j \leq n\}$$
-$$N_- = \{j: a_j < 0 \;\;\forall j\;\; 1\leq j \leq n\}$$
+$$N^+ = \{j: a_j > 0 \text{ con } 1\leq j \leq n\}$$
+$$N^- = \{j: a_j < 0 \text{ con } 1\leq j \leq n\}$$
 
 Y usando el cambio de variables:
 
@@ -65,25 +65,25 @@ Se puede hacer una traducción de la siguiente forma:
 
 $$\overset{n}{\underset{j=1}{\sum}} a_j\;x_j \leq b$$
 $$\Leftrightarrow$$
-$$\overset{}{\underset{j \in N_+}{\sum}} a_j\;x_j - \overset{}{\underset{j \in N_-}{\sum}} |a_j|\;x_j \leq b$$
+$$\overset{}{\underset{j \in N^+}{\sum}} a_j\;x_j - \overset{}{\underset{j \in N^-}{\sum}} |a_j|\;x_j \leq b$$
 $$\Leftrightarrow$$
-$$\overset{}{\underset{j \in N_+}{\sum}} a_j\;x_j - \overset{}{\underset{j \in N_-}{\sum}} |a_j|\;(1-\bar{x}_j) \leq b$$
+$$\overset{}{\underset{j \in N^+}{\sum}} a_j\;x_j - \overset{}{\underset{j \in N^-}{\sum}} |a_j|\;(1-\bar{x}_j) \leq b$$
 $$\Leftrightarrow$$
-$$\overset{}{\underset{j \in N_+}{\sum}} a_j\;x_j + \overset{}{\underset{j \in N_-}{\sum}} |a_j|\;\bar{x}_j \leq b + \overset{}{\underset{j \in N_-}{\sum}} |a_j|$$
+$$\overset{}{\underset{j \in N^+}{\sum}} a_j\;x_j + \overset{}{\underset{j \in N^-}{\sum}} |a_j|\;\bar{x}_j \leq b + \overset{}{\underset{j \in N^-}{\sum}} |a_j|$$
 
 De esta forma, en el caso de restricciones con variables binarias, cualquier inecuación puede traducirse a desigualdad mochila:
 
 {
 \centering
 \begin{tabular}{p{4cm}p{4cm}p{4cm}}
-$\overset{}{\underset{j \in N_+ \cup N_-}{\sum}} |a_j|\;\tilde{x}_j \leq \tilde{b}$
+$\overset{}{\underset{j \in N^+ \cup N^-}{\sum}} |a_j|\;\tilde{x}_j \leq \tilde{b}$
 &
-$\tilde{b} = b + \overset{}{\underset{j \in N_-}{\sum}} |a_j|$
+$\tilde{b} = b + \overset{}{\underset{j \in N^-}{\sum}} |a_j|$
 &
 $\tilde{x}_j = 
 \begin{cases}
-x_j & \text{ si } j \in N_+\\
-\bar{x}_j & \text{ si } j \in N_-\\
+x_j & \text{ si } j \in N^+\\
+\bar{x}_j & \text{ si } j \in N^-\\
 \end{cases}$\\
 \end{tabular}\\
 \vspace{5mm}
@@ -95,7 +95,7 @@ Dada $x^*$ con $0\leq x_j \leq 1$ ($1\leq j \leq n$) solución óptima de la rel
 {
 \centering
 \begin{tabular}{ccc}
-$\overset{}{\underset{j \in C}{\sum}} x^*_j > |C|-1$ & y & $\overset{}{\underset{j \in C}{\sum}} \lfloor \tilde{a}_j \rfloor > \lceil \tilde{b} \rceil$\\
+$\overset{}{\underset{j \in C}{\sum}} \tilde{x}^*_j > |C|-1$ & y & $\overset{}{\underset{j \in C}{\sum}} \lfloor \tilde{a}_j \rfloor > \lceil \tilde{b} \rceil$\\
 \end{tabular}\\
 \vspace{5mm}
 }
@@ -105,7 +105,7 @@ Este cover $C$ puede encontrarse resolviendo el MIP:
 {
 \centering
 \begin{tabular}{rl}
-minimizar & $\overset{n}{\underset{j=1}{\sum}} (1 - x^*_j) y_j$\\
+minimizar & $\overset{n}{\underset{j=1}{\sum}} (1 - \tilde{x}^*_j) y_j$\\
 sujeto a&\\
 &$\overset{n}{\underset{j=1}{\sum}} \lfloor \tilde{a}_j \rfloor y_j \geq \lceil \tilde{b} \rceil + 1$\\
 &$y_j \in \{0,1\}$\\
@@ -113,12 +113,26 @@ sujeto a&\\
 \vspace{5mm}
 }
 
-Si el funcional es mayor o igual a 1, no existe un cover violado por $x^*$. Si se encuentra $y^*$ tal que el valor del óptimo es menor a 1, los valores de $y^*$ hacen un cover violado. Sea $G=\{j: y^*_j = 1\}$ ($G$ es el cover $C$ buscado):
+Donde, para ser consistente con el cambio de variables, vale:
+
+$$\tilde{x}^*_j = 
+\begin{cases}
+x^*_j & \text{ si } j \in N^+\\
+1-x^*_j & \text{ si } j \in N^-\\
+\end{cases}$$
+
+Si el funcional es mayor o igual a 1, no existe un cover violado por $\tilde{x}^*$. Si se encuentra $y^*$ tal que el valor del óptimo es menor a 1, los valores de $y^*$ hacen un cover violado ya que:
+
+$$\overset{n}{\underset{j=1}{\sum}} (1 - \tilde{x}^*_j) y_j < 1 \Rightarrow$$
+$$\overset{n}{\underset{j\in C}{\sum}} (1-\tilde{x}^*_j) < 1 \Rightarrow$$
+$$|C| - 1 < \overset{n}{\underset{j\in C}{\sum}} \tilde{x}^*_j$$
+
+El cover buscado es $C=\{j: y^*_j = 1\}$ y la desigualdad cover encontrada es:
 
 {
 \centering
 \begin{tabular}{cc}
-$\overset{}{\underset{j \in G}{\sum}} \tilde{x}_j \leq |G|-1$ & $(< \overset{}{\underset{j \in G}{\sum}} x^*_j)$\\
+$\overset{}{\underset{j \in C}{\sum}} \tilde{x}_j \leq |C|-1$ & $(< \overset{}{\underset{j \in C}{\sum}} \tilde{x}^*_j)$\\
 \end{tabular}\\
 \vspace{5mm}
 }
@@ -127,38 +141,36 @@ Esta desigualdad es válida porque como muestra el MIP que la encuentra, es una 
 
 \item \underline{Extensión del cover:}
 
-Una vez obtenido el cover $G$:
+Una vez obtenido el cover $C$:
 
-$$\overset{}{\underset{j \in G}{\sum}} \tilde{x}_j \leq |G|-1$$
+$$\overset{}{\underset{j \in C}{\sum}} \tilde{x}_j \leq |C|-1$$
 
-Se puede extender de la siguiente forma:
+Se puede extender de la siguiente forma (para $j \notin C$):
 
-$$E(G) = G \cup \{j: \tilde{a}_j \geq \tilde{a}_k \;\;\forall k\;\; \in G\}$$
+$$E(C) = C \cup \{j: \tilde{a}_j \geq \tilde{a}_k \;\;\forall k\;\; \in C\}$$
 
 Y queda el cover extendido:
 
-$$\overset{}{\underset{j \in E(G)}{\sum}} \tilde{x}_j \leq |G|-1$$
+$$\overset{}{\underset{j \in E(C)}{\sum}} \tilde{x}_j \leq |C|-1$$
 
 \item \underline{Reescribir el cover en función de variables originales:}\\
 Una vez que se consiguió un cover hay que recuperar las variables originales usando el reemplazo:
 
 $$\tilde{x}_j = 
 \begin{cases}
-x_j & \text{ si } j \in N_+\\
-1-x_j & \text{ si } j \in N_-\\
+x_j & \text{ si } j \in N^+\\
+1-x_j & \text{ si } j \in N^-\\
 \end{cases}$$
 
 Entonces:
 
-$$\overset{}{\underset{j \in E(G)}{\sum}} \tilde{x}_j \leq |G| - 1$$
+$$\overset{}{\underset{j \in E(C)}{\sum}} \tilde{x}_j \leq |C| - 1$$
 $$\Leftrightarrow$$
-$$\overset{}{\underset{j \in E(G)\cap N_+}{\sum}}x_j + \overset{}{\underset{j \in E(G)\cap N_-}{\sum}} (1-x_j) \leq |G|-1$$
+$$\overset{}{\underset{j \in E(C)\cap N^+}{\sum}}x_j + \overset{}{\underset{j \in E(C)\cap N^-}{\sum}} (1-x_j) \leq |C|-1$$
 
 El cover quedará finalmente:
 
-$$\overset{}{\underset{j\in E(G)}{\sum}} \tilde{x}_j \leq |G|-1$$
-$$\Leftrightarrow$$
-$$\overset{}{\underset{j\in E(G)\cap N_+}{\sum}} x_j - \overset{}{\underset{j \in E(G)\cap N_-}{\sum}} x_j \leq |G| - h -1$$
+$$\overset{}{\underset{j\in E(C)\cap N^+}{\sum}} x_j - \overset{}{\underset{j \in E(C)\cap N^-}{\sum}} x_j \leq |C| - h -1$$
 
-Con $h = |E(G)\cap N_-|$.
+Con $h = |E(C)\cap N^-|$.
 \end{enumerate}
