@@ -41,7 +41,7 @@ Para encontrar el corte cover en este trabajo se siguen los siguientes pasos:
 A continuación, la explicación detallada de cada paso.
 \newpage
 
-\begin{enumerate}
+\begin{enumerate}[ 1{)} ]
 \item \underline{Tomar una restricción original del MIP:}\\
 Cualquier restricción de la forma:
 $$\overset{n}{\underset{j=1}{\sum}} a_j\;x_j \leq b$$
@@ -75,8 +75,10 @@ De esta forma, en el caso de restricciones con variables binarias, cualquier ine
 
 {
 \centering
-\begin{tabular}{p{4cm}p{4cm}p{4cm}}
-$\overset{}{\underset{j \in N^+ \cup N^-}{\sum}} |a_j|\;\tilde{x}_j \leq \tilde{b}$
+\begin{tabular}{p{4cm}p{2cm}p{3cm}p{4cm}}
+$\overset{}{\underset{j \in N^+ \cup N^-}{\sum}} \tilde{a}_j\;\tilde{x}_j \leq \tilde{b}$
+&
+$\tilde{a}_j = |a_j|$
 &
 $\tilde{b} = b + \overset{}{\underset{j \in N^-}{\sum}} |a_j|$
 &
@@ -100,7 +102,7 @@ $\overset{}{\underset{j \in C}{\sum}} \tilde{x}^*_j > |C|-1$ & y & $\overset{}{\
 \vspace{5mm}
 }
 
-Este cover $C$ puede encontrarse resolviendo el MIP:
+Este cover $C$ puede encontrarse resolviendo el siguiente MIP (sub-MIP mochila):
 
 {
 \centering
@@ -123,9 +125,9 @@ x^*_j & \text{ si } j \in N^+\\
 
 Si el funcional es mayor o igual a 1, no existe un cover violado por $\tilde{x}^*$. Si se encuentra $y^*$ tal que el valor del óptimo es menor a 1, los valores de $y^*$ hacen un cover violado ya que:
 
-$$\overset{n}{\underset{j=1}{\sum}} (1 - \tilde{x}^*_j) y_j < 1 \Rightarrow$$
-$$\overset{n}{\underset{j\in C}{\sum}} (1-\tilde{x}^*_j) < 1 \Rightarrow$$
-$$|C| - 1 < \overset{n}{\underset{j\in C}{\sum}} \tilde{x}^*_j$$
+$$1 > \overset{n}{\underset{j=1}{\sum}} (1 - \tilde{x}^*_j) y_j \Rightarrow$$
+$$1 > \overset{n}{\underset{j\in C}{\sum}} (1-\tilde{x}^*_j) \Rightarrow$$
+$$\overset{n}{\underset{j\in C}{\sum}} \tilde{x}^*_j > |C| - 1$$
 
 El cover buscado es $C=\{j: y^*_j = 1\}$ y la desigualdad cover encontrada es:
 

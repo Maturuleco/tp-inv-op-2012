@@ -1,1 +1,101 @@
 \subsubsection{Cortes Cover: Detalles de Implementación}
+
+En primera instancia se comentará aquí una serie de detalles de implementación respecto a los cinco pasos que se siguen para encontrar cortes clique. Luego, se introducirá brevemente el módulo \verb_Covers_ que se utiliza para el manejo de desigualdades mochila a la hora de búsqueda de cortes cover.
+
+\begin{itemize}
+\item \underline{Pre-optimización:}\\
+Antes del llamado a \verb_CPXmipopt_ hay que inicializar un objeto \verb_Covers_ ``rellenándolo'' con información sobre las restricciones originales. Por cada restricción original se hacen los primeros dos pasos:
+	\begin{enumerate}[1{)}]
+	\item \emph{Tomar una restricción original del MIP}.\\
+		(con orientación ``$\leq$'', multiplicando por -1 si es necesario).
+	\item \emph{Traducirla a desigualdad mochila}.
+	\end{enumerate}
+
+\item \underline{Durante la optimización:}\\
+En el \emph{cut callback} para buscar cortes cover se obtiene el valor de $x^*$ con \verb_CPXgetcallbacknodex_. Luego, para cada desigualdad mochila se realizan los otros tres pasos:
+	\begin{enumerate}[1{)}]
+	\setcounter{enumi}{2}
+	\item \emph{Búsqueda del cover}.\\
+		(se pueden usar un algoritmo goloso y uno exacto de programación dinámica, ver más abajo).
+	\item \emph{Extensión del cover}.\\
+		(sólo si se encontró uno).
+	\item \emph{Reescribir el cover en función de variables originales}.\\
+		(sólo si se encontró uno).
+	\end{enumerate}
+\end{itemize}
+
+La clase \verb_Covers_ tiene las siguientes funciones:
+
+\begin{itemize}
+\item \verb_bool estaVacio() const_\\
+Devuelve $true$ si a la instancia no se le introdujo el número de variables y el número de restricciones.
+
+\item \verb_int numeroVariables() const_\\
+Devuelve la cantidad de variables que tiene el MIP.
+
+\item \verb_int numeroRestricciones() const_\\
+Devuelve la cantidad de restricciones que tiene el MIP.
+
+\item \verb_int cuantosGreedy() const_\\
+Devuelve la cantidad de cortes cover que se encontraron con el algoritmo goloso.
+
+\item \verb_int cuantosDinamicos() const_\\
+Devuelve la cantidad de cortes cover que se encontraron con el algoritmo exacto de programación dinámica.
+
+\item \verb_void reajustar(cantRestricciones,cantVariables)_
+	\begin{itemize}
+	\item \verb_cantRestricciones_: \verb_int_
+	\item \verb_cantVariables_: \verb_int_
+	\end{itemize}
+Se usa inmediatamente después de la declaración de una instancia y sirve para introducir el número de restricciones y de variables que tiene el MIP cuyas restricciones son traducidas a desigualdades mochila.
+
+\item \verb_bool puedoBuscarEnRestriccion(r) const_
+	\begin{itemize}
+	\item \verb_r_: \verb_int_
+	\end{itemize}
+Indica si la restricción r-ésima del MIP fue ``agregada'' a la instancia y se pudo traducir correctamente la misma a una desigualdad mochila.
+
+\item \verb_void agregarRestriccionesTraducidas(r, vec, ind, b)_
+	\begin{itemize}
+	\item \verb_r_: \verb_int_
+	\item \verb_vec_: \verb_const vector<double>&_
+	\item \verb_ind_: \verb_const vector<int>&_
+	\item \verb_b_: \verb_double_
+	\end{itemize}
+Se usa para ``agregar'' la restricción r-ésima del MIP original a la instancia del tipo \verb_Covers_ y traducirla a una desigualdad del tipo mochila. El vector $vec$ indica los coeficientes no nulos de dicha restricción, y el vector $ind$ indica los índices a los que corresponde cada coeficiente (el coeficiente $vec[i]$ corresponde a la variable número $ind[i]$); el valor de $b$ es el del RHS (\emph{right-hand side}) de la restricción.
+
+\item \verb@void buscarCover(r, x_opt, tamanho, corte, index, b)@
+	\begin{itemize}
+	\item \verb_r_: \verb_int_
+	\item \verb@x_opt@: \verb_const double*_
+	\item \verb_tamanho_: \verb_int_
+	\item \verb_corte_: \verb_vector<double>&_
+	\item \verb_index_: \verb_vector<int>&_
+	\item \verb_b_: \verb_double&_
+	\end{itemize}
+Se usa para buscar un corte cover sobre la desigualdad mochila correspondiente a la traducción de la restricción r-ésima. El array $x\_opt$ tiene tamaño igual a $tamanho$, se usa siempre con $tamanho$ igual a la cantidad de variables del MIP e indica el valor de cada variable en el óptimo de la relajación ($x\_opt[j]=x^*_j$). Los vectores $corte$ e $index$ se pasan por referencia y empiezan vacíos (tamaño igual a 0). En caso de encontrar un corte cover violado se modifica su tamaño y se rellenarán con los valores correspondientes al cover, al igual que el RHS $b$. O sea, los valores de $corte$, $index$ y $b$ describen el cover violado encontrado (y si no son modificados indican que no se encontró ningún cover con la desigualdad mochila r-ésima).
+
+\item \verb_bool resolverMochila(r, objfunc, agregar)_
+	\begin{itemize}
+	\item \verb_r_: \verb_int_
+	\item \verb_objfunc_: \verb_const vector<double>&_
+	\item \verb_agregar_: \verb_vector<bool>&_
+	\end{itemize}
+Devuelve $true$ si se encuentra un cover violado. Cuando devuelve $true$ además modifica el arreglo $agregar$ de forma tal que $agregar[j]$ signifique que la variable $\tilde{x}_j$ forma parte del cover $C$. Los valores de $objfunc$ se usan como los coeficientes de la función objetivo del sub-MIP mochila que hay que resolver en el paso 3 (es decir, vale $objfunc[j]=(1-\tilde{x}^*_j)$). Este algoritmo puede utilizar llamadas a \verb_resolverMochilaGreedy_ y/o \verb_resolverMochilaDinamica_ para intentar encontrar un cover violado.
+
+\item \verb_bool resolverMochilaGreedy(r, objfunc, agregar) const_
+	\begin{itemize}
+	\item \verb_r_: \verb_int_
+	\item \verb_objfunc_: \verb_const vector<double>&_
+	\item \verb_agregar_: \verb_vector<bool>&_
+	\end{itemize}
+Es el algoritmo goloso para encontrar un corte cover. Primero se consigue un vector de beneficios donde el beneficio de agregar la variable $y_j$ es igual a $\dfrac{objfunc[j]}{\tilde{a}_j}$ (o sea, me aporta \emph{poco} a la función objetivo y \emph{mucho} para cumplir la restricción del sub-MIP mochila). Se ordena de menor a mayor y se empiezan a agregar las $y_j$ de mayor beneficio hasta violar la restricción del sub-MIP mochila. Si en ese momento la suma de los $objfunc[j]$ es menor a 1, se tiene un cover violado y se asignan los valores del vector $agregar$ de acuerdo a los valores que violaron el cover.
+
+\item \verb_bool resolverMochilaDinamica(r, objfunc, agregar) const_
+	\begin{itemize}
+	\item \verb_r_: \verb_int_
+	\item \verb_objfunc_: \verb_const vector<double>&_
+	\item \verb_agregar_: \verb_vector<bool>&_
+	\end{itemize}
+Es el algoritmo dinámico exacto para encontrar un corte cover. El algoritmo está basado en $[3]$ (ver \emph{Referencias}), con la diferencia de que al tener que cumplir una restricción por ``$\geq$'' en vez de por ``$\leq$'' hay que aplicar una lógica inversa (primero se agregan todos los productos a la mochila y luego se analiza cuáles conviene sacar). Este algoritmo tiene una complejidad \emph{pseudo-polinomial} con lo cual se fija un límite antes de resolverlo (si supera el límite entonces no se intenta buscar cover violado con este algoritmo). En caso de encontrar un cover, también se asignan en $true$ los índices de los $y_j$ que están en el cover en el vector $agregar$.
+\end{itemize}
