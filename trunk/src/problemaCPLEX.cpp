@@ -11,6 +11,12 @@ problemaCPLEX::problemaCPLEX()
 	if (env == NULL) {
 		cerr << "Error creando el entorno." << endl;
 	}
+
+	relajacionEnRaiz = 0.0;
+	tiempoDeCallback = 0.0;
+	tiempoDeOptimizacion = 0.0;
+	tiempoPreOptimizacion = 0.0;
+	hayRelajacionEnRaiz = false;
 } /* constructor para iniciar el problema CPLEX */
 
 
@@ -40,9 +46,6 @@ problemaCPLEX::~problemaCPLEX()
 // optimizacion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void problemaCPLEX::resolverMIP()
 {
-	tiempoDeOptimizacion = 0.0;
-	numeroDeNodosDeOptimizacion = 0;
-
 	double time_beg = 0.0;
 	double time_end = 0.0;
 
@@ -50,7 +53,6 @@ void problemaCPLEX::resolverMIP()
 	status = CPXmipopt (env, lp);
 	status = CPXgettime(env,&time_end);
 
-	numeroDeNodosDeOptimizacion = CPXgetnodecnt(env,lp);
 	tiempoDeOptimizacion = time_end - time_beg;
 
 	if ( status ) {
@@ -63,7 +65,14 @@ void problemaCPLEX::mostrarSolucion()
 {
 	double tolerancia = 1e-10;
 
-	// muestro que algoritmo se corrio
+//// muestro que algoritmo se corrio
+	if (tipoDeOptimizacion() == CPX_MIN)
+		printf("Minimizacion.\n");
+	else if (tipoDeOptimizacion() == CPX_MAX)
+		printf("Maximizacion.\n");
+	else
+		printf("Error al obtener sentido de optimizacion (min, max).\n");
+
 	switch(tipo)
 	{
 		case BRANCH_AND_BOUND:
@@ -77,7 +86,7 @@ void problemaCPLEX::mostrarSolucion()
 			break;
 	}
 
-	// muestro estado de la solucion
+//// muestro estado de la solucion
 	int solstat = CPXgetstat (env, lp);
 	char buffer[511];
 	CPXCHARptr statstring = CPXgetstatstring(env,solstat,buffer);
@@ -86,44 +95,51 @@ void problemaCPLEX::mostrarSolucion()
 	else
 		printf ("Solution status: %s.\n",buffer);
 
-	// muestro funcional
+//// muestro funcional
 	double objVal = optimo();
-	printf ("Objective value: %.10g\n", objVal );
+	printf ("MIP Objective value:\t\t\t %.10g\n", objVal );
+	printf("LP Objetctive value:\t\t\t %.10g\n", relajacionEnRaiz);
 
-	// muestro valores de las variables
-	int cur_numcols = numeroVariables();
-	double variables[cur_numcols];
-	for (int i = 0; i < cur_numcols; i++){
-		variables[i] = 0.0;
-	}
-	double * x = (double*)&variables;
-	status = CPXgetx (env, lp, x, 0, cur_numcols-1);
-	if ( status ) {
-		fprintf (stderr, "Failed to obtain solution.\n");
-		return;
-	}
-	for (int j = 0; j < cur_numcols; j++) {
-		if ( fabs (variables[j]) > tolerancia ) {
-			printf ( "Column %d:  Value = %17.10g\n", j, variables[j]);
-		}
-	}
+//// muestro gap vs nodo raiz
+	double gapVsRaiz = fabs( (100.0*(objVal - relajacionEnRaiz))/relajacionEnRaiz );
+	printf("Gap vs Nodo Raiz:\t\t\t %.10g\n", gapVsRaiz);
 
-	// muestro informacion del arbol de branching
-	printf("Tiempo en Optimizar: %4.3f [segs].\n",tiempoDeOptimizacion);
-	printf("Numero de nodos: %d.\n", numeroDeNodosDeOptimizacion);
+//// muestro gap alcanzado
+	double gapAlcanzado = 0.0;
+	status = CPXgetmiprelgap(env, lp, &gapAlcanzado);
+	printf("Gap final alcanzado:\t\t\t %.10g\n", gapAlcanzado);
 
-	// muestro informacion de cortes cover agregados
-	if (sePidieronCortesCover())
-	{
-		printf("Cortes Cover Dynamic Agregados> %d\n", mochilas.cuantosDinamicos());
-		printf("Cortes Cover Greedy Agregados> %d\n", mochilas.cuantosGreedy());
-	}
+//// muestro informacion del arbol de branching
+	printf("Tiempo en PreOptimizacion:\t\t %.10g [segs]\n", tiempoPreOptimizacion);
+	printf("Tiempo en Optimizar:\t\t\t %.10g [segs]\n",tiempoDeOptimizacion);
+	printf("Tiempo en Buscar Cortes:\t\t %.10g [segs]\n", tiempoDeCallback);
+	printf("Numero de variables:\t\t\t %d\n", numeroVariables());
+	printf("Numero de restricciones:\t\t %d\n", numeroRestricciones());
+	printf("Numero de nodos:\t\t\t %d\n", CPXgetnodecnt(env,lp));
+	printf("Nodo de valor optimo:\t\t\t %d\n", CPXgetnodeint(env,lp));
+	printf("Nodos que quedaron sin explorar:\t %d\n", CPXgetnodeleftcnt(env,lp));
 
-	// muestro informacion de cortes clique agregados
-	if (sePidieronCortesClique())
-	{
-		printf("Cortes Clique Agregados> %d\n", grafoDeConflictos.cuantosCortes());
-	}
+//// muestro informacion de cortes agregados
+	printf("Cortes Cover Dynamic Agregados>\t\t %d\n", mochilas.cuantosDinamicos());
+	printf("Cortes Cover Greedy Agregados>\t\t %d\n", mochilas.cuantosGreedy());
+	printf("Cortes Clique Agregados>\t\t %d\n", grafoDeConflictos.cuantosCortes());
+	printf("Cantidad de ejes en Grafo Conflicto>\t %d\n",grafoDeConflictos.cuantosEjes());
+
+//// muestro valores de las variables
+//	int cur_numcols = numeroVariables();
+//	double variables[cur_numcols];
+//	for (int i = 0; i < cur_numcols; i++){
+//		variables[i] = 0.0;
+//	}
+//	double * x = (double*)&variables;
+//	status = CPXgetx (env, lp, x, 0, cur_numcols-1);
+//	if ( status ) {
+//		fprintf (stderr, "Failed to obtain solution.\n");
+//		return;
+//	}
+//	for (int j = 0; j < cur_numcols; j++) {
+//		if ( fabs (variables[j]) > tolerancia )
+//			printf ( "Column %d:  Value = %.4f\n", j, variables[j]);
 } /* mostrar por stdout los resultados obtenidos */
 
 
@@ -162,6 +178,24 @@ int problemaCPLEX::numeroVariables() const
 {
 	return CPXgetnumcols(env,lp);
 } /* numero de variables originales del MIP */
+
+
+bool problemaCPLEX::optimoDeRelajacionAgregado() const
+{
+	return hayRelajacionEnRaiz;
+} /* para saber si el valor del optimo en el nodo raiz se asigno en la instancia */
+
+
+void problemaCPLEX::sumarTiempoDeCallback(double valor)
+{
+	tiempoDeCallback += valor;
+} /* agregar tiempo transcurrido en el callback */
+
+
+int problemaCPLEX::tipoDeOptimizacion() const
+{
+	return CPXgetobjsen(env,lp);
+} /* devuelve CPX_MIN si es problema de minimizacion o sino CPX_MAX */
 
 
 // obtener el funcional en su valor optimo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -239,25 +273,46 @@ void problemaCPLEX::elegirEstrategiaDeSeleccionDeVariable()
 }
 
 
-void problemaCPLEX::configuracion(bool bc, bool cb, bool cl, bool co)
+void problemaCPLEX::asignarOptimoDeRelajacion(double valor)
 {
+	hayRelajacionEnRaiz = true;
+	relajacionEnRaiz = valor;
+} /* para asignar el valor del optimo en el nodo raiz en la instancia */
+
+
+void problemaCPLEX::configuracion(bool bc, bool cb, bool cl, bool gCo, bool eCo)
+{
+	// aviso a cplex informacion de cortes
+	status = CPXsetusercutcallbackfunc(env, planosDeCorte, this);
+	if (status)
+	{
+		fprintf(stderr, "Falla en CPXsetusercutcallbackfunc().\n");
+	}
+
 	// decido tecnica algoritmica
-	if ( not(bc or cb) or not(cl or co) )
+	if ( not(bc or cb) or not(cl or gCo or eCo) )
 	{
 		/* branch and bound, no usa cortes */
 		return;
 	}
+
+	double time_beg = 0.0;
+	double time_end = 0.0;
+
+	status = CPXgettime(env,&time_beg);
 
 	if (bc)
 		tipo = BRANCH_AND_CUT;
 	else
 		tipo = CUT_AND_BRANCH;
 
+	int numR = numeroRestricciones();
+	int numV = numeroVariables();
+
 	// preparo estructuras para cortes
-	if (co or cl)
+	if (gCo or eCo or cl)
 	{
 		// agarro informacion de restricciones del MIP
-		int numR = numeroRestricciones();
 		char senses[numR];
 		status = CPXgetsense(env, lp, senses, 0, numR-1);
 		if (status) { return; }
@@ -290,20 +345,22 @@ void problemaCPLEX::configuracion(bool bc, bool cb, bool cl, bool co)
 		}
 
 		// preprocesamiento necesario para cortes cover
-		if (co)
+		if (gCo or eCo)
+		{
+			mochilas.reajustar(numR, numV, gCo, eCo);
 			agregarMochilas(numR, senses, desigualdades, subindices, bes);
+		}
 
 		// preprocesamiento necesario para cortes clique
 		if (cl)
+		{
+			grafoDeConflictos.ingresarCantidadDeNodos(numV);
 			armarGrafoDeConflictos(numR, senses, desigualdades, subindices, bes);
+		}
 	}
 
-	// aviso a cplex informacion de cortes
-	status = CPXsetusercutcallbackfunc(env, planosDeCorte, this);
-	if (status)
-	{
-		fprintf(stderr, "Falla en CPXsetusercutcallbackfunc().\n");
-	}
+	status = CPXgettime(env,&time_end);
+	tiempoPreOptimizacion = time_end - time_beg;
 } /* preparar los cortes y el algoritmo elegidos */
 
 
@@ -491,9 +548,6 @@ void problemaCPLEX::agregarMochilas
 					const vector< vector<int> >& subindices,
 					const vector<double>& bes)
 {
-	int numV = numeroVariables();
-	mochilas.reajustar(numR,numV);
-
 	for (int r = 0; r < numR; r++)
 	{
 		if (senses[r] == 'L')
@@ -513,9 +567,6 @@ void problemaCPLEX::armarGrafoDeConflictos
 					const vector< vector<int> >& subindices,
 					const vector<double>& bes)
 {
-	int numV = numeroVariables();
-	grafoDeConflictos.ingresarCantidadDeNodos(numV);
-
 	// primera fase de busqueda de ejes
 	for (int r = 0; r < numR; r++)
 	{
@@ -567,8 +618,8 @@ bool estoyEnRaiz(CPXCENVptr env, void* cbdata, int wherefrom, int& estado)
 } /* para saber si el callback vuelve de analizar al nodo raiz */
 
 
-int LIMITE_PARA_BRANCHING = 0;
-int LIMITE_PROCESAMIENTO_NODO = 0;
+int CORTES_AGREGADOS = 0;
+int VECES_PROCESAMIENTO_NODO = 0;
 
 
 static int CPXPUBLIC 
@@ -579,22 +630,44 @@ static int CPXPUBLIC
 	int estado = 0, addcuts = 0;
 
 	problemaCPLEX *problema = (problemaCPLEX*)cbhandle;
-	bool soloEnRaiz = problema->elTipo() == CUT_AND_BRANCH;
+	enum ALGORITMO probType = problema->elTipo();
+	bool soloEnRaiz = ( probType != BRANCH_AND_CUT );
 	bool esRaiz = estoyEnRaiz(env, cbdata, wherefrom, estado);
 	*useraction_p = CPX_CALLBACK_ABORT_CUT_LOOP;
 
 	if (estado or (soloEnRaiz and not(esRaiz)))
-	{
 		return estado;
+
+	if (esRaiz)
+	{
+		// en la raiz soy mas violento con cortes y veces de procesamiento
+		if (VECES_PROCESAMIENTO_NODO > 20 or CORTES_AGREGADOS > 10000)
+		{
+			CORTES_AGREGADOS = 0;
+			VECES_PROCESAMIENTO_NODO = 0;
+			return estado;
+		}
+		if (not problema->optimoDeRelajacionAgregado())
+		{
+			double optimoRelajacion = 0.0;
+			estado = CPXgetcallbacknodeinfo(env, cbdata, wherefrom, 0,
+							CPX_CALLBACK_INFO_NODE_OBJVAL, &optimoRelajacion);
+			problema->asignarOptimoDeRelajacion(optimoRelajacion);
+		}
+	}
+	else
+	{
+		// en nodos no raiz hago un unico procesamiento
+		if (VECES_PROCESAMIENTO_NODO > 0)
+		{
+			CORTES_AGREGADOS = 0;
+			VECES_PROCESAMIENTO_NODO = 0;
+			return estado;
+		}
 	}
 
-	// no proceso un mismo nodo mas de 3 veces ni agrego mas de 10 cortes entre pasadas
-	if (LIMITE_PROCESAMIENTO_NODO > 3 or LIMITE_PARA_BRANCHING > 10)
-	{
-		LIMITE_PARA_BRANCHING = 0;
-		LIMITE_PROCESAMIENTO_NODO = 0;
+	if (probType == BRANCH_AND_BOUND)
 		return estado;
-	}
 
 	int tamanho = problema->numeroVariables();
 	double x[tamanho];
@@ -604,6 +677,10 @@ static int CPXPUBLIC
 		return estado;
 	}
 
+	double time_beg = 0.0;
+	double time_end = 0.0;
+
+	estado = CPXgettime(env,&time_beg);
 
 //// cortes cover
 	if (problema->sePidieronCortesCover())
@@ -630,15 +707,18 @@ static int CPXPUBLIC
 //// preparo salida avisandole a CPLEX si se crearon o no cortes
 	if ( addcuts > 0 )
 	{
-		LIMITE_PARA_BRANCHING += addcuts;
-		LIMITE_PROCESAMIENTO_NODO += 1;
+		CORTES_AGREGADOS += addcuts;
+		VECES_PROCESAMIENTO_NODO += 1;
 		*useraction_p = CPX_CALLBACK_SET; 
 	}
 	else
 	{
-		LIMITE_PARA_BRANCHING = 0;
-		LIMITE_PROCESAMIENTO_NODO = 0;
+		CORTES_AGREGADOS = 0;
+		VECES_PROCESAMIENTO_NODO = 0;
 	}
+
+	estado = CPXgettime(env,&time_end);
+	problema->sumarTiempoDeCallback(time_end - time_beg);
 
 	return (estado);
 } /* cut callback para CPLEX */

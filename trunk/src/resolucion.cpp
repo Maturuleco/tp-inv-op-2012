@@ -10,23 +10,39 @@ int main(int argc, char **argv) {
 
     char* archivoLP = argv[1];
 	bool usoCliques = false;
-	bool usoCovers = false;
+	bool usoCoversG = false;
+	bool usoCoversE = false;
 	bool cutandbranch = false;
 	bool branchandcut = false;
 
-	for (int e = 0; e < argc; e++)
+	for (int e = 2; e < argc; e++)
 	{
-		if (strcmp( argv[e], "bc" ) == 0) {
+		if (strcmp( argv[e], "cq" ) == 0) {
+			usoCliques = true;
+		} else if (strcmp( argv[e], "cv") == 0) {
+			usoCoversE = true;
+			usoCoversG = true;
+		} else if (strcmp( argv[e], "cc") == 0) {
+			usoCliques = true;
+			usoCoversE = true;
+			usoCoversG = true;
+		} else if (strcmp( argv[e], "gc") == 0) {
+			usoCoversG = true;
+		} else if (strcmp( argv[e], "ec") == 0) {
+			usoCoversE = true;
+		} else if (strcmp( argv[e], "gl") == 0) {
+			usoCliques = true;
+			usoCoversG = true;
+		} else if (strcmp( argv[e], "el") == 0) {
+			usoCliques = true;
+			usoCoversE = true;
+		} else if (strcmp( argv[e], "bc") == 0) {
 			branchandcut = true;
 		} else if (strcmp( argv[e], "cb") == 0) {
 			cutandbranch = true;
-		} else if (strcmp( argv[e], "cl") == 0) {
-			usoCliques = true;
-		} else if (strcmp( argv[e], "co") == 0) {
-			usoCovers = true;
-		} else if (strcmp( argv[e], "cc") == 0) {
-			usoCliques = true;
-			usoCovers = true;
+		} else {
+			printf("'%s'\t Opcion Incorrecta.\n", argv[e]);
+			return 1;
 		}
 	}
 
@@ -56,7 +72,7 @@ int main(int argc, char **argv) {
 	problema.elegirEstrategiaDeSeleccionDeVariable();	/* se usa 'min-infeas' */
 	if ( levantaExcepcion(problema) ) { return 1; }
 
-	problema.configuracion(branchandcut, cutandbranch, usoCliques, usoCovers);
+	problema.configuracion(branchandcut, cutandbranch, usoCliques, usoCoversG,usoCoversE);
 	if ( levantaExcepcion(problema) ) { return 1; }
 
 

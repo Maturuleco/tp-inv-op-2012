@@ -50,6 +50,8 @@ public:
 	enum ALGORITMO elTipo() const;
 	int numeroVariables() const;
 	int numeroRestricciones() const;
+	bool optimoDeRelajacionAgregado() const;
+	int tipoDeOptimizacion() const;
 
 	// setters
     double getTime();
@@ -58,8 +60,10 @@ public:
     void deshabilitarParametros();
 	void elegirEstrategiaDeSeleccionDeNodo();
 	void elegirEstrategiaDeSeleccionDeVariable();
-	void configuracion(bool bc, bool cb, bool cl, bool co);
+	void configuracion(bool, bool, bool, bool, bool);
     void setearTiempoMaximo(double limite_en_segundos);
+	void asignarOptimoDeRelajacion(double);
+	void sumarTiempoDeCallback(double);
 	void mostrarSolucion();
 	void resolverMIP();
 
@@ -90,8 +94,11 @@ private:
 							   const vector< vector<int> >&, const vector<double>&);
 
 	// representacion interna
+	bool hayRelajacionEnRaiz;			/* indica si se seteo valor de relajacionEnRaiz */
+	double relajacionEnRaiz;			/* valor optimo en la relajacion del nodo raiz */
+	double tiempoPreOptimizacion;		/* tiempo en preparacion para cortes */
 	double tiempoDeOptimizacion;		/* tiempo de CPXmipopt */
-	int numeroDeNodosDeOptimizacion;	/* nodos usados en CPXmipopt */
+	double tiempoDeCallback;			/* tiempo total de busquda de cortes */
 	int status;							/* status de rutinas de CPLEX */
 	CPXENVptr env;						/* entorno del MIP */
 	CPXLPptr lp;						/* el prbolema MIP */

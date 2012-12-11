@@ -9,10 +9,14 @@ void errorEnParametros() {
 	cout << "    bb = Branch & Bound\n";
 	cout << "    bc = Branch & Cut\n";
 	cout << "    cb = Cut & Branch\n";
-    cout << "  -[cortes]: cl, co, cc\n";
-	cout << "    cl = Cortes clique\n";
-	cout << "    co = Cortes cover\n";
-	cout << "    cc = Cortes clique + Cortes cover\n";
+    cout << "  -[cortes]: cq, cv, cc, gc, ec, gl, el\n";
+	cout << "    cq = Cortes clique\n";
+	cout << "    cv = Cortes cover con algoritmos goloso y exacto\n";
+	cout << "    cc = Cortes clique + Cortes cover goloso y exacto\n";
+	cout << "    gc = Cortes cover con algoritmo goloso\n";
+	cout << "    ec = Cortes cover con algoritmo exacto\n";
+	cout << "    gl = Cortes clique + Cortes cover con algoritmo goloso\n";
+	cout << "    el = Cortes clique + Cortes cover con algoritmo exacto\n";
 	cout << "\nEjemplo>\n  ./resolucion knapsack/knapsack.lp bb\n";
 	cout << "    -branch and bound sin usar planos de corte-\n";
 	cout << "\nEjemplo>\n  ./resolucion knapsack/knapsack.lp bc cc\n";

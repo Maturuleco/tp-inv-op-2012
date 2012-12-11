@@ -5,6 +5,8 @@
 // constructor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Covers::Covers()
 {
+	exact = false;
+	greedy = false;
 	cant_variables = 0;
 	cant_restricciones = 0;
 	coversGreedyAgregados = 0;
@@ -12,8 +14,10 @@ Covers::Covers()
 } /* declaracion */
 
 
-void Covers::reajustar(int cantRestricciones, int cantVariables)
+void Covers::reajustar(int cantRestricciones, int cantVariables, bool usoG, bool usoE)
 {
+	exact = usoE;
+	greedy = usoG;
 	cant_variables = cantVariables;
 	cant_restricciones = cantRestricciones;
 	validas.resize(cantRestricciones,false);
@@ -187,14 +191,14 @@ bool Covers::resolverMochila
 	(int r,const vector<double>& objfunc,vector<bool>& agregar)
 {
 	// intento algoritmo programacion dinamica
-	if (resolverMochilaDinamica(r,objfunc,agregar))
+	if (exact and resolverMochilaDinamica(r,objfunc,agregar))
 	{
 		coversDinamicosAgregados += 1;
 		return true;
 	}
 
 	// intento algoritmo goloso
-	if (resolverMochilaGreedy(r,objfunc,agregar))
+	if (greedy and resolverMochilaGreedy(r,objfunc,agregar))
 	{
 		coversGreedyAgregados += 1;
 		return true;
