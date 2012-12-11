@@ -20,7 +20,7 @@ public:
 	void mostrar() const;
 	bool sonVecinos(int,int,bool c=false,bool d=false) const;
 	bool grafoVacio() const;
-	bool cuantosCortes() const;
+	int cuantosCortes() const;
 	int cuantosEjes() const;
 	int gradoDeNodo(int) const;
 	const list<int>& vecinosDeNodo(int) const;

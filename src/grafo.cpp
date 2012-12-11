@@ -20,7 +20,7 @@ bool Grafo::grafoVacio() const
 } /* para saber si se usan cortes clique o no */
 
 
-bool Grafo::cuantosCortes() const
+int Grafo::cuantosCortes() const
 {
 	return numeroCortes;
 } /* para saber cuantos cortes clique se agregaron */
@@ -52,7 +52,7 @@ void Grafo::mostrar() const
 		list<int>::const_iterator nb = vecinosDeNodo(i).begin(); 
 		list<int>::const_iterator end = vecinosDeNodo(i).end();
 		for( ; nb != end; nb++){
-			fprintf(output,"%i ",*nb);
+			fprintf(output,"nodo %i -> %i ",i,*nb);
 		}
 		fprintf(output,"\n");
 	}

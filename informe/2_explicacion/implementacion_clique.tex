@@ -1,1 +1,118 @@
 \subsubsection{Cortes Clique: Detalles de Implementación}
+
+Antes de la explicación del módulo \verb_Grafo_ en donde se realiza todo el trabajo de armar el grafo de conflictos y buscar desigualdades clique violadas, se detallan algunos aspectos de la implementaci\'on respecto a los pasos para encontrar los cortes clique.
+
+\begin{itemize}
+\item \underline{Pre-optimización:}\\
+Antes del llamado a \verb_CPXmipopt_ hay que inicializar un objeto \verb_Grafo_  con un nodo por cada variable del problema y su complemento (en el trabajo no se indican los ejes entre una variable $x_i$ y su complemento $\bar{x}_i$ ya que se sabe que exactamente una de las dos es igual a 1). Luego, por cada restricción se hace el primer paso, que es buscar ejes hasta armar el grafo de conflictos:
+	\begin{enumerate}[1{)}]
+	\item \emph{Armar el grafo de conflictos}.\\
+		Se emplean los m\'etodos descriptos en la parte de la explicaci\'on de los cortes clique para buscar ejes en el grafo. Una vez completadas ambas fases, queda armado el grafo de conflictos.
+	\end{enumerate}
+
+\item \underline{Durante la optimización:}\\
+En el \emph{cut callback} para buscar cortes clique se obtiene el valor de $x^*$ con \verb_CPXgetcallbacknodex_. Luego, se utiliza el grafo de conflictos armado para buscar cliques maximales que violen a $x^*$:
+	\begin{enumerate}[1{)}]
+	\setcounter{enumi}{2}
+	\item \emph{Búsqueda de las cliques violadas}.\\
+		Se utiliza un algoritmo heur\'istico para encontrar cliques en el grafo y luego se chequea si son violadas.
+	\item \emph{Reescribir la desigualdad clique en función de las variables originales}.\\
+		Se reescribe la desgualdad sólo si se encontró una.
+	\end{enumerate}
+\end{itemize}
+
+La clase \verb_Grafo_ tiene las siguientes funciones:
+
+\begin{itemize}
+\item \verb@void ingresarCantidadDeNodos(n)@ 
+	\begin{itemize}
+	\item \verb_n_: \verb_int_
+	\end{itemize}
+Se utiliza para ingresar la cantidad de variables del problema. Lo que hace es crear los 2*n v\'ertices del grafo (recordar que hay un v\'ertice por cada variable y su complemento).
+
+\item \verb_bool grafoVacio() const_\\
+Devuelve $true$ si a la instacia no se le introdujo el n\'umero de variables.
+
+\item \verb_int cuantosCortes() const_\\
+Devuelve la cantidad de cortes clique encontrados.
+
+\item \verb_int cuantosEjes() const_\\
+Devuelve la cantidad de ejes agregados hasta el momento al grafo.
+
+\item \verb_int gradoDeNodo(nodo) const_
+	\begin{itemize}
+	\item \verb_nodo_: \verb_int_
+	\end{itemize}
+Devuelve el grado del nodo pasado como par\'ametro.
+
+\item \verb_list<int>& vecinosDeNodo(nodo) const_
+	\begin{itemize}
+	\item \verb_nodo_: \verb_int_
+	\end{itemize}
+Devuelve una lista con los v\'ertices adyacentes al nodo pasado como par\'ametro.
+
+\item \verb_void mostrar() const_\\
+Imprime en el archivo \textit{graph.txt} la lista de adyacencia que representa al grafo.
+
+\item \verb_bool sonVecinos(u,v,uComplemento,vComplemento)_
+	\begin{itemize}
+	\item \verb_u_: \verb_int_
+	\item \verb_v_: \verb_int_
+	\item \verb_uComplemento_: \verb_bool_
+	\item \verb_vComplemento_: \verb_bool_
+	\end{itemize}
+Devuelve $true$ si el nodo $u$ y $v$ son adyacentes (los otros dos par\'ametros s\'olo nos indican si se trata de variables complemento).
+
+\item \verb_void agregarEje(u,v,uComplemento,vComplemento)_
+	\begin{itemize}
+	\item \verb_u_: \verb_int_
+	\item \verb_v_: \verb_int_
+	\item \verb_uComplemento_: \verb_bool_
+	\item \verb_vComplemento_: \verb_bool_
+	\end{itemize}
+Simplemente agrega un eje entre los nodos $u$ y $v$ en el grafo de conflictos, y al igual que en la funci\'on anterior los otros dos par\'ametros nos indican si son variables complemento.
+
+\item \verb_void buscarEjesEnRestriccion(ar,indices,b)_
+	\begin{itemize}
+	\item \verb_ar_: \verb_const vector<double>&_
+	\item \verb_indices_: \verb_const vector<int>&_
+	\item \verb_b_: \verb_double_
+	\end{itemize}
+Es la funci\'on que implementa la primera fase de b\'usqueda de ejes. $ar$ contiene los coeficientes no nulos que acompañan a las variables de una restricci\'on $r$, $indices$ contiene los \'indices de dichas variables, y $b$ es el RHS (\emph{right-hand side}). B\'asicamente por cada $x_i$, $x_j$ distintos, prueba todas las combinaciones de $x_i = v_i$, $x_j = v_j$ con $v_i,v_j\in \{0,1\}$ y agrega un eje cada vez $L^r > b_r$.
+
+\item \verb@void buscarConCliqueEnRestriccion(ar,indices,b)@ 
+	\begin{itemize}
+	\item \verb_ar_: \verb_const vector<double>&_
+	\item \verb_indices_: \verb_const vector<int>&_
+	\item \verb_b_: \verb_double_
+	\end{itemize}
+Es la funci\'on que implementa la segunda fase de b\'usqueda de ejes. Los par\'ametros son exactamente los mismo que en la funci\'on anterior. Dada una restricci\'on $r$, se queda con el subgrafo de $g$ inducido por $U$, $G(U)$ que es mirar las variables de $r$ en el grafo con coeficientes no nulos y particionarlo en cliques. Previamente, se ordena los v\'ertices de $U$ por mayor peso (para encontrar cliques pesadas y mejorar la cota). Luego, por cada $x_i$, $x_j$ distintos, se prueba todas las combinaciones de $x_i = v_i$, $x_j = v_j$ con $v_i,v_j\in \{0,1\}$ eligiendo el v\'ertice m\'as pesado de cada clique sujeto a esta condici\'on. Se calcula el $L^r$ indicado y si $L^r > b_r$ se agrega el eje correspondiente.
+
+\item \verb_int particionarEnCliques(jotas,indices,cEnGdeU,vEnClique) const_
+	\begin{itemize}
+	\item \verb_jotas_: \verb_const vector<int>&_
+	\item \verb_indices_: \verb_const vector<int>&_
+	\item \verb_cEnGdeU_: \verb_cont vector<bool>&_
+	\item \verb_vEnClique_: \verb_vector<int>&_
+	\end{itemize}
+Es el algoritmo heur\'istico para particionar $G(U)$ en cliques. Numera las cliques y deja en el vector $vEnClique$ por cada nodo en $G(U)$ a qu\'e n\'umero de clique pertenece. Devuelve el n\'umero de cliques en que particina $G(U)$.
+
+\item \verb@void buscarClique(nodo,xopt,vars,corte,indices,rhs)@
+	\begin{itemize}
+	\item \verb_nodo_: \verb_int_
+	\item \verb_xopt_: \verb_const double*_
+	\item \verb_vars_: \verb_int_
+	\item \verb_corte_: \verb_vector<double>&_
+	\item \verb_indices_: \verb_vector<int>&_
+	\item \verb_rhs_: \verb_double&_
+	\end{itemize}
+Se usa para buscar un corte clique usando el grafo de conflictos. El array $xopt$ indica el valor de cada variable en el óptimo de la relajación ($xopt[j]=x^*_j$). Los vectores $corte$ e $indices$ se pasan por referencia y empiezan vacíos (tamaño igual a 0). La idea es que por cada nodo pasado por par\'ametro, busca la clique maximal que lo contenga. Cuando encuentra dicha clique se fija si es violado, para encontrar un corte clique. En tal caso rellena $corte$, $indices$ y $rhs$ con los valores correspondientes al corte clique. O sea, los valores de $corte$, $index$ y $b$ describen la clique violada encontrada (y si no son modificados indican que no se encontró ninguna clique violada).
+
+\item \verb_bool nodoExtiendeCliques(nodo,clique) const_
+	\begin{itemize}
+	\item \verb_nodo_: \verb_int_
+	\item \verb_clique_: \verb_const list<int>&_
+	\end{itemize}
+La lista $clique$ contiene los v\'ertices de la clique (posiblemente no maximal) encontrada hasta el momento y se fija si el nodo pasado como par\'ametro es adyacente a todos los nodos de la clique para ver si se puede extenderla. Devuelve $true$ justamente si $nodo$ es adyacente a todos los v\'ertices de $clique$.
+
+\end{itemize}

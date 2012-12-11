@@ -1,1 +1,121 @@
 \subsubsection{Cortes Clique: Explicación Teórica}
+
+La idea central de este método es armar un grafo, llamado \textit{grafo de conflictos}, que respresentan relaciones l\'ogicas entre las variables del problema lineal. Dicho grafo tiene un v\'ertice por cada variable ($x_i$) y su complemento ($\bar{x}_i = 1 - x_i$), y un eje entre dos v\'ertices cuando a lo sumo una de las dos variables que comparten el eje puede estar en 1 en una soluci\'on \'optimo. Hay cuantro relaciones l\'ogicas entre las variables (recordemos que las variables son binarias): \\ 
+\begin{eqnarray*}
+x_i = 1 \Rightarrow x_j = 0 & \Longrightarrow & x_i + x_j \leq 1 \\
+x_i = 0 \Rightarrow x_j = 0 & \Longrightarrow & (1 - x_i) + x_j \leq 1 \\
+x_i = 1 \Rightarrow x_j = 1 & \Longrightarrow & x_i + (1 - x_j) \leq 1 \\
+x_i = 0 \Rightarrow x_j = 1 & \Longrightarrow & (1 - x_i) + (1 - x_j) \leq 1 
+\end{eqnarray*}
+
+Seguro una variable y su complemento est\'an unidos por un eje ya que exactamente una de las dos tiene que ser igual a 1 (en realidad es una relaci\'on m\'as fuerte). Entonces, se construye un grafo $G = (V,E)$ utilizando t\'ecnicas para deducir relaciones entre variables. Estas t\'ecnicas son llamadas de \textit{probing}: b\'asicamente es setear alguna variable binaria en una de sus cotas y estudiar las consecuencias. Si seteamos una variable en una de sus cotas y el problema se vuelve infactible, esto quiere decir que la variable necesariamente tiene que estar en la cota opuesta.
+
+Se van a desarrollar brevemente dos t\'ecnicas utilizadas en el trabajo para deducir relaciones entre variables para agregar ejes al \textit{grafo de conflictos}. Una primera fase relativamente simple para agregar ejes y una segunda fase m\'as fuerte para intentar completar con m\'as ejes.
+
+\subsubsection*{Primera fase}
+
+Sea $S = \{x\in {0,1}^n : Ax \leq b\}$ donde $Ax \leq b$ representa las restricciones lineales del problema a resolver. Se define el siguiente conjunto: 
+$$S_{x_i=v_i,x_j=v_j} = \{x\in S : x_i = v_i, x_j = v_j\}$$ 
+donde $v_i,v_j\in \{0,1\}$ y $x_i \neq x_j$. Es decir, las soluciones del problema tales que $x_i$ y $x_j$ est\'an seteados en $v_i$ y $v_j$ respectivamente. Como calcular este conjunto es tan dif\'icil como resolver el problema original, se trabaja con la relajaci\'on $S'_{x_i=v_i,x_j=v_j}$ de $S_{x_i=v_i,x_j=v_j}$ (pues $S'_{x_i=v_i,x_j=v_j} \supseteq S_{x_i=v_i,x_j=v_j}$). \\
+Luego, sea $L^r_{x_i=v_i,x_j=v_j} = min\{a_rx : x\in S'_{x_i=v_i,x_j=v_j}\}$ donde $a_r$ es la \textit{r-\'esima} fila de $A$. De $L^r$ se puede deducir lo siguiente:
+\begin{itemize}
+\item $L^r_{x_i=1,x_j=1} > b_r \Longrightarrow x_i + x_j \leq 1$ es v\'alido para $S$ y $(i,j)\in E$
+\item $L^r_{x_i=1,x_j=0} > b_r \Longrightarrow x_i + (1-x_j) \leq 1$ es v\'alido para $S$ y $(i,\bar{j})\in E$ 
+\item $L^r_{x_i=0,x_j=1} > b_r \Longrightarrow (1-x_i) + x_j \leq 1$ es v\'alido para $S$ y $(\bar{i},j)\in E$ 
+\item $L^r_{x_i=0,x_j=0} > b_r \Longrightarrow (1-x_i) + (1-x_j) \leq 1$ es v\'alido para $S$ y $(\bar{i},\bar{j})\in E$
+\end{itemize}
+
+Utilizar la relajaci\'on $S'_{x_i=v_i,x_j=v_j}$ puede ser costosa, as\'i que se puede usar otra relajaci\'on m\'as d\'ebil pero con un esfuerzo computacional menor. La relajaci\'on utilizada es la siguiente: se puede usar simplemente las cotas de las variables. Para cada fila $r$ se define: \\ 
+$$B^+_r = \{j: a_{rj} > 0 \text{ con } 1\leq j \leq n\}$$
+$$B^-_r = \{j: a_{rj} < 0 \text{ con } 1\leq j \leq n\}$$
+
+Entonces, se toma la siguiente relajaci\'on: 
+
+$$L^r_{x_i=v_i,x_j=v_j} = \overset{}{\underset{k\in B^-_r,k\neq i,k\neq j}{\sum}} a_{rk} + a_{ri}v_i + a_{rj}v_j$$
+
+As\'i, para cada restricci\'on $r$ se hacen todas las combinaciones con $x_i = v_i$ y $x_j = v_j$, $v_i,v_j\in \{0,1\}$ y se calcula el $L^r$ correspondiente para saber si $L^r > b_r$. En tal caso, se agrega el eje correspondiente al grafo de conflictos.
+
+\subsubsection*{Segunda fase}
+
+Utilizando las cotas de las variables y el grafo ya armado en la primera fase se puede conseguir una relajaci\'on m\'as fuerte. Se considera un subconjunto de v\'ertices $U \subseteq V$ que denotan las variables en $B^-_r$ y lo complementos de variables en $B^+_r$ de la fila $r$ de $A$. Definimos $w_k = |a_{rk}|$ para cada $k\in U$. Entonces, una cota inferior de $L^r$ para el m\'inimo valor del lado izquierdo de la fila $r$ se obtiene resolviendo el problema del conjunto independiente m\'as pesado del subgrafo $U$:
+\begin{center}
+$\zeta^r = \sum_{k\in B^+_r}a_{rk} - max\{\sum_{k\in U}w_k\;z_k : z\quad$conjunto independiente de$\quad G(U)\}$
+\end{center}
+
+donde $G(U)$ es el subgrafo de $G$ inducido por $U$ y $z\in \{0,1\}^|U|$ el vector que caracteriza el conjunto independiente de $G(U)$ (es decir, $z_k = 1$ si $k$ pertenece al conjunto independiente y $z_k = 0$ si no). La sumatoria de los $a_{rk}$ con $k\in B^+_r$ pues se usan los complementos de las variables con \'indices en $B^+_r$. 
+
+Como resolver este nuevo problema es $NP$-hard, se resuelve una relajaci\'on del conjunto independiente m\'as pesado observando que si un grafo consiste en subgrafos completos disjuntos el conjunto independiente \'optimo se consigue eligiendo el v\'ertice m\'as pesado de cada subgrafo completo. Entonces, la idea es particionar los v\'ertices de $G(U)$ en un conjunto de cliques, utilizando alg\'un algoritmo que no sea muy costoso, y elegir el v\'ertice m\'as pesado de cada clique.
+
+Una vez que la partici\'on en cliques esta hecho, se busca un cota inferior para $L^r_{x_i=v_i,x_j=v_j}$ eligiendo el v\'ertice m\'as pesado de cada clique sujeto a que $x_i = v_i$ y $x_j = v_j$. Esto se hace para cada combinaci\'on de $v_i,v_j\in \{0,1\}$ teniendo cuidado de obviar los casos en que haya un eje en el grafo de conflictos con dicha combinaci\'on.
+
+\subsubsection*{Corte Clique}
+
+Un ''corte clique'', consiste en encontrar una o m\'as cliques maximales en el grafo de conflictos armado que representen una desigualdad válida para toda solución entera del MIP pero que deje afuera soluciones fraccionarias. La idea es recibir la solución óptima de la relajación de un nodo $x^*$ como input y a partir de ella deducir una desigualdad clique violada por $x^*$:\\
+
+{
+\centering
+\begin{tabular}{c l}
+\verb_INPUT_ & $x^*$\\
+\verb_OUTPUT_ & Desigualdad clique violada por $x^*$\\
+\end{tabular}\\
+\vspace{5mm}
+}
+
+Entonces la idea es buscar una (ó más) clique maximal $K$ en el grafo de conflictos tal que: 
+
+$$\sum_{j\in K}\tilde{x^*_j} > 1$$
+
+donde 
+$\tilde{x^*_j} = 
+\begin{cases}
+\bar{x}^*_j & \text{ si j es complemento en el grafo}\\
+x^*_j & \text{ si no}\\
+\end{cases}$\\
+
+Si sucede esto, podemos agregar el siguiente corte clique v\'alido al conjunto de restricciones del MIP:
+
+$$\sum_{j\in K}\tilde{x_j} \leq 1$$
+
+Para encontrar un corte clique en este trabajo se siguen los siguientes pasos:
+
+\begin{enumerate}
+\item Armar el grafo de conflictos con los métodos antes explicados.
+\item Buscar una o m\'as cliques maximales en el grafo, violadas por la relajaci\'on lineal.
+\item Reescribir la desigualdad clique en función de las variables originales.
+\end{enumerate}
+
+A continuaci\'on se explica brevemente cada paso.
+
+\begin{enumerate}[ 1{)} ]
+\item \underline{Armar el grafo de conflictos con las fases antes explicadas:}\\
+
+Por cada restricci\'on del MIP se busca agregar ejes al grafo de conflictos probando cada combinaci\'on de $v_i$ y $v_j$ asignadas a cada variable con coeficiente distinto de 0 de la restricci\'on tanto en la primera fase como en la segunda. Luego de las dos fases queda armado el grafo de conflictos con las relaciones l\'ogicas v\'alidas entre las variables.
+
+\item \underline{Buscar una o m\'as cliques maximales en el grafo, violadas por la relajaci\'on lineal:}\\
+
+Con la relajaci\'on lineal obtenida y el grafo de conflictos armado, se busca una o m\'as cliques maximales (con algún algoritmo heurísitico) tal que los valores de la relajaci\'on violen la desigualdad clique ($\sum_{j\in K}\tilde{x^*_j} > 1$ donde $K$ es la clique).
+
+\item \underline{Reescribir la desigualdad clique en función de las variables originales:}\\
+
+Una vez conseguido el corte clique (llamemos $K$ a la clique) hay que recuperar las variables originales usando el reemplazo:
+$\tilde{x_j} = 
+\begin{cases}
+1-x_j & \text{ si } \bar{j}\in K\\
+x_j & \text{ si } j\in K\\
+\end{cases}$\\
+
+Entonces:
+
+$$\sum_{j\in K}\tilde{x_j} \leq 1$$
+$$\Longleftrightarrow$$
+$$\sum_{j\in K}x_j + \sum_{\bar{j}\in K}(1-x_j) \leq 1$$
+
+El corte clique finalmente queda:
+
+$$\sum_{j\in K}x_j - \sum_{\bar{j}\in K}x_j \leq 1 - k$$
+
+donde $k = |\{\bar{j} : \bar{j}\in K\}|$
+
+\end{enumerate}
+
+ 
