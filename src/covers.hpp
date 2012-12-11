@@ -17,7 +17,7 @@ public:
 
 	// class
 	Covers();
-	void reajustar(int,int);
+	void reajustar(int,int,bool,bool);
 
 	// getters
 	bool estaVacio() const;
@@ -38,6 +38,8 @@ private:
 	bool resolverMochilaGreedy(int,const vector<double>&,vector<bool>&) const;
 	bool resolverMochilaDinamica(int,const vector<double>&,vector<bool>&) const;
 
+	bool exact;
+	bool greedy;
 	int cant_variables;
 	int cant_restricciones;
 	int coversGreedyAgregados;
