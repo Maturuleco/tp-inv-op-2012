@@ -32,12 +32,12 @@ Permite acceder a la información sobre el MIP, sin interferir en el espacio de 
 Permite monitorear una optimización y opcionalmente terminarla, accediendo a más información que un callback Informational. Se asigna con \verb_CPXsetlpcallbackfunc_ o \verb_CPXsetmipcallbackfunc_.
 
 \item \underline{Control:}\\
-Permite controlar la búsqueda del Branch\&Cut en la optimización MIP. Se desarrolla en breve.
+Permite controlar la búsqueda del Branch\&Cut en la optimización MIP.
 \end{itemize}
 
 Los callback devuelven un \verb_int_ y debe ser 0 si el mismo fue exitoso o distinto de 0 si debe terminar la optimización.\\
 
-Los callback de control pueden ser de varios tipos (en el trabajo sólo se usa el Cut Callback):
+Los callback de control pueden ser de varios tipos (en este trabajo sólo se usa el Cut Callback):
 
 \begin{itemize}
 \item \underline{Node callback:}\\

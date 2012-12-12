@@ -89,7 +89,7 @@ Devuelve $true$ si se encuentra un cover violado. Cuando devuelve $true$ además
 	\item \verb_objfunc_: \verb_const vector<double>&_
 	\item \verb_agregar_: \verb_vector<bool>&_
 	\end{itemize}
-Es el algoritmo goloso para encontrar un corte cover. Primero se consigue un vector de beneficios donde el beneficio de agregar la variable $y_j$ es igual a $\dfrac{objfunc[j]}{\tilde{a}_j}$ (o sea, me aporta \emph{poco} a la función objetivo y \emph{mucho} para cumplir la restricción del sub-MIP mochila). Se ordena de menor a mayor y se empiezan a agregar las $y_j$ de mayor beneficio hasta violar la restricción del sub-MIP mochila. Si en ese momento la suma de los $objfunc[j]$ es menor a 1, se tiene un cover violado y se asignan los valores del vector $agregar$ de acuerdo a los valores que violaron el cover.
+Es el algoritmo goloso para encontrar un corte cover. Primero se consigue un vector de beneficios donde el beneficio de agregar la variable $y_j$ es igual a $\dfrac{objfunc[j]}{\tilde{a}_j}$ (o sea, aporta \emph{poco} a la función objetivo y \emph{mucho} para cumplir la restricción del sub-MIP mochila). Se ordena de menor a mayor y se empiezan a agregar las $y_j$ de mayor beneficio hasta violar la restricción del sub-MIP mochila. Si en ese momento la suma de los $objfunc[j]$ es menor a 1, se tiene un cover violado y se asignan los valores del vector $agregar$ de acuerdo a los valores que violaron el cover.
 
 \item \verb_bool resolverMochilaDinamica(r, objfunc, agregar) const_
 	\begin{itemize}
