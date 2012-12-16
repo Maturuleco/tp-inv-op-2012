@@ -17,7 +17,9 @@ int main(int argc, char **argv) {
 
 	for (int e = 2; e < argc; e++)
 	{
-		if (strcmp( argv[e], "cq" ) == 0) {
+		if (strcmp( argv[e], "bb" ) == 0) {
+			break;
+		} else if (strcmp( argv[e], "cq" ) == 0) {
 			usoCliques = true;
 		} else if (strcmp( argv[e], "cv") == 0) {
 			usoCoversE = true;
