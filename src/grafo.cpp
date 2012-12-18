@@ -16,7 +16,7 @@ void Grafo::ingresarCantidadDeNodos(int n)
 // observadores ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 bool Grafo::grafoVacio() const
 {
-	return (numeroNodos==0);
+	return (numeroNodos*numeroEjes == 0);
 } /* para saber si se usan cortes clique o no */
 
 
@@ -298,6 +298,10 @@ void Grafo::buscarClique(int nodo,const double* x_opt,int vars,
 	clique.push_back(nodo);
 	int cVecinos = gradoDeNodo(nodo);
 
+	// si no tiene vecinos no hay clique para buscar
+	if (cVecinos == 0)
+		return;
+
 	vector<double> pesoVecinos(cVecinos, 0.0);
 	vector<int> indVecinos(cVecinos, 0);
 	vector<int> vecinos(cVecinos, 0);
@@ -327,7 +331,7 @@ void Grafo::buscarClique(int nodo,const double* x_opt,int vars,
 	double acum = 0.0;
 	int negativos = 0;
 	vector<int> indicesBis(clique.size(), 0);
-	vector<double> corteBis(clique.size() ,0.0);
+	vector<double> corteBis(clique.size(), 0.0);
 	list<int>::const_iterator enClique = clique.begin();
 	for (int i = 0; enClique != clique.end(); enClique++, i++)
 	{
