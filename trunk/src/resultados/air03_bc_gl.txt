@@ -1,0 +1,20 @@
+Minimizacion.
+Branch & Cut.
+Solution status: integer optimal, tolerance.
+MIP Objective value:			 340160
+LP Objetctive value:			 338864.25
+Gap vs Nodo Raiz:			 0.3823802599
+Gap final alcanzado:			 7.349482596e-05
+Tiempo en PreOptimizacion:		 0.0002470016479 [segs]
+Tiempo en Optimizar:			 1.565135002 [segs]
+Tiempo en Buscar Cortes:		 0.6654641628 [segs]
+Numero de variables:			 10757
+Numero de restricciones:		 124
+Numero de nodos:			 356
+Nodo de valor optimo:			 88
+Nodos que quedaron sin explorar:	 1
+Cortes Cover Dynamic Agregados>		 0
+Cortes Cover Greedy Agregados>		 0
+Cortes Clique Agregados>		 171
+Cantidad de ejes en Grafo Conflicto>	 0
+
