@@ -124,6 +124,7 @@ void problemaCPLEX::mostrarSolucion()
 	printf("Cortes Cover Greedy Agregados>\t\t %d\n", mochilas.cuantosGreedy());
 	printf("Cortes Clique Agregados>\t\t %d\n", grafoDeConflictos.cuantosCortes());
 	printf("Cantidad de ejes en Grafo Conflicto>\t %d\n",grafoDeConflictos.cuantosEjes());
+	printf("\n");
 
 //// muestro valores de las variables
 //	int cur_numcols = numeroVariables();

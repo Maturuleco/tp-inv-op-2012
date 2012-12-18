@@ -1,0 +1,20 @@
+Minimizacion.
+Branch & Cut.
+Solution status: time limit exceeded.
+MIP Objective value:			 115275
+LP Objetctive value:			 114740.5185
+Gap vs Nodo Raiz:			 0.4658175905
+Gap final alcanzado:			 0.00235003891
+Tiempo en PreOptimizacion:		 0.3186719418 [segs]
+Tiempo en Optimizar:			 3600.002005 [segs]
+Tiempo en Buscar Cortes:		 2967.160012 [segs]
+Numero de variables:			 10724
+Numero de restricciones:		 2054
+Numero de nodos:			 232323
+Nodo de valor optimo:			 67004
+Nodos que quedaron sin explorar:	 146401
+Cortes Cover Dynamic Agregados>		 31785
+Cortes Cover Greedy Agregados>		 16121961
+Cortes Clique Agregados>		 597330
+Cantidad de ejes en Grafo Conflicto>	 0
+
