@@ -1,4 +1,4 @@
-\subsubsection*{\underline{Tabla 3.1}}
+\subsubsection*{\underline{Tabla 3.1.0}}
 
 \noindent Referencia de etiquetas para tablas de sección \emph{Resultados}.\\
 
@@ -9,27 +9,34 @@
 \hline
 \textbf{Etiqueta} & \textbf{Descripción}\\
 \hline
-N & Nombre de la instancia\\
+T & Tipo de Optimización (MIN minimización o MAX maximización)\\
 \hline
-T & Tipo de Optimización (minimización o maximización)\\
+ALG & Técnica algorítmica de resolución de MIP (BB, CB o BC)\\
+& Y cortes usados: \\
+& \hspace{5mm} - CC = cover (exacto y goloso) y clique\\
+& \hspace{5mm} -  CQ = clique\\
+& \hspace{5mm} -  CV = cover (exacto y goloso)\\
+& \hspace{5mm} -  EC = cover exacto\\
+& \hspace{5mm} -  EL = cover exacto y clique\\
+& \hspace{5mm} -  GC = cover goloso\\
+& \hspace{5mm} -  GL = cover goloso y clique\\
 \hline
-ALG & Técnica algorítmica de resolución de MIP\\
+OPT & Indica si hubo timeout (N) o se encontró valor óptimo (Y) \\
+& El caso Y contempla también el caso de frenado por tolerancia\\
 \hline
-OPT & Indica si se encontró valor óptimo (Y) o hubo timeout (N)\\
+MIP & Valor de mejor solución entera encontrada ($\mathbb{Z}$)\\
 \hline
-MIP & Valor de mejor solución entera encontrada\\
+LP & Valor de solución óptima de la relajación en el nodo raíz ($\mathbb{R}$)\\
 \hline
-LP & Valor de solución óptima de la relajación en el nodo raíz\\
+GR & $\%$ Gap del óptimo con respecto al nodo raíz\\
 \hline
-GR & Gap del óptimo con respecto al nodo raíz\\
+GF & $\%$ Gap alcanzado\\
 \hline
-GF & Gap alcanzado\\
+TPO & Tiempo utilizado antes de la optimización (preparación de cortes), en segundos\\
 \hline
-TPO & Tiempo utilizado antes de la optimización (preparación de cortes)\\
+TO & Tiempo utilizado durante toda la optimización, en segundos\\
 \hline
-TO & Tiempo utilizado durante toda la optimización\\
-\hline
-TBC & Tiempo de optimización usado en buscar cortes\\
+TBC & Tiempo de optimización usado en buscar cortes, en segundos\\
 \hline
 VAR & Número de variables del MIP\\
 \hline
@@ -50,4 +57,6 @@ CLI & Número de cortes clique encontrados\\
 EGC & Número de ejes encontrados en el grafo de conflictos\\
 \hline
 \end{tabular}\\}
-\vspace{4mm}
+\vspace{1cm}
+
+\noindent Por último, los valores reales fueron redondeados para mostrarlos únicamente con dos cifras decimales significativas.
