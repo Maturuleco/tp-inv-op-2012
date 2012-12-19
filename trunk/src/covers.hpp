@@ -50,6 +50,7 @@ private:
 	vector< vector<int> > indices;			// indica el indice de la variable
 	vector<bool> validas;					// dice si la la restriccion es usable
 	vector<double> rhs;						// guarda el rhs de la restriccion
+	vector<int> prometedores;				// guarda |covers| minimos para buscar cortes
 };
 
 

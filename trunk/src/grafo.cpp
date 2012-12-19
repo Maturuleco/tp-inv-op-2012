@@ -317,6 +317,15 @@ void Grafo::buscarClique(int nodo,const double* x_opt,int vars,
 		else
 			pesoVecinos[i] = 1.0 - x_opt[*vecino- numeroNodos];
 	}
+
+	//// HEURISTICA PROMETEDORA: si el nodo y sus vecinos no suman 1, no busco corte
+	double prometedora = x_opt[nodo];
+	forn(i,cVecinos)
+		prometedora += fabs(pesoVecinos[i]);
+	if (prometedora <= 1.0)
+		return;
+	//// FIN HEURISTICA PROMETEDORA
+
 	mergeSort(indVecinos, pesoVecinos);
 
 	// armo la clique maximal agregando nodos vecinos a todos los de la clique
@@ -351,7 +360,7 @@ void Grafo::buscarClique(int nodo,const double* x_opt,int vars,
 	}
 	
 	// si es un corte le aviso a la funcion que me llamo
-	if (acum > 1.0)
+	if ((acum > 1.0) and (clique.size() > 1))
 	{
 		rhs = 1.0 - negativos;
 		corte = corteBis;
