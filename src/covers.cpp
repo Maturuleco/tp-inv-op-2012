@@ -25,6 +25,7 @@ void Covers::reajustar(int cantRestricciones, int cantVariables, bool usoG, bool
 	indicadores.resize(cantRestricciones);
 	indices.resize(cantRestricciones);
 	rhs.resize(cantRestricciones,0.0);
+	prometedores.resize(cantRestricciones,0);
 } /* inicializacion una vez declarado */
 
 
@@ -106,8 +107,25 @@ void Covers::agregarRestriccionesTraducidas
 		}
 		rhs[r] /= minCoef;
 	}
-
 	validas[r] = true;
+
+	//// HEURISTICA PROMETEDORA: busco un cardinal cover minimo
+	vector<double> a_r = restricciones[r];
+	vector<int> i_r(vars,0);					// no me importa este vector
+	mergeSort(i_r,a_r);
+	double limite = ceil(rhs[r]);
+	int mincvr = 0;
+	rforn(j,vars)
+	{
+		if (limite < 0.0)
+			break;
+		limite -= floor(a_r[j]);
+		mincvr += 1;
+	}
+	prometedores[r] = mincvr;
+	validas[r] = validas[r] and (limite <= 0.0);
+	//// FIN HEURISTICA PROMETEDORA
+
 } /* toma la r-esima restriccion original, la traduce a desigualdad mochila y la guarda */
 
 
@@ -128,6 +146,20 @@ void Covers::buscarCover(int r, const double* x_opt, int tamanho, vector<double>
 		if (indicadores[r][j])
 			objfunc[j] = x_j;
 	}
+
+
+	//// HEURISTICA PROMETEDORA: si la suma no sobrepasa minimo cover, no busco corte
+	double esperanza = 0.0;
+	double incremento = 0.0;
+	forn(j, vars)
+	{
+		incremento = x_opt[ indices[r][j] ];
+		incremento = (indicadores[r][j])? (1.0-incremento) : (incremento);
+		esperanza += fabs(incremento) + 1E-5;
+	}
+	if (esperanza <= (double)prometedores[r] - 1.0) return;
+	//// FIN HEURISTICA PROMETEDORA
+
 
 	if (resolverMochila(r, objfunc, agregar))
 	{

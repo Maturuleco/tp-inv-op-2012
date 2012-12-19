@@ -10,7 +10,7 @@
 #define forn(i,n) for(int i = 0; i < (int)(n); i++)
 #define forkn(i,k,n) for(int i = (int)(k); i < (int)(n); i++)
 #define rforn(i,n) for(int i = (int)(n-1); i >= 0; i--)
-
+#define TOLERANCIA 1E-9
 
 // modulos de c o c++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #include <vector>
