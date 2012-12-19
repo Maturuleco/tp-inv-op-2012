@@ -321,7 +321,7 @@ void Grafo::buscarClique(int nodo,const double* x_opt,int vars,
 	//// HEURISTICA PROMETEDORA: si el nodo y sus vecinos no suman 1, no busco corte
 	double prometedora = x_opt[nodo];
 	forn(i,cVecinos)
-		prometedora += fabs(pesoVecinos[i]);
+		prometedora += fabs(pesoVecinos[i]) + 1E-5;
 	if (prometedora <= 1.0)
 		return;
 	//// FIN HEURISTICA PROMETEDORA

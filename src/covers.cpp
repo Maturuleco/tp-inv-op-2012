@@ -222,17 +222,17 @@ void Covers::buscarCover(int r, const double* x_opt, int tamanho, vector<double>
 bool Covers::resolverMochila
 	(int r,const vector<double>& objfunc,vector<bool>& agregar)
 {
-	// intento algoritmo programacion dinamica
-	if (exact and resolverMochilaDinamica(r,objfunc,agregar))
-	{
-		coversDinamicosAgregados += 1;
-		return true;
-	}
-
 	// intento algoritmo goloso
 	if (greedy and resolverMochilaGreedy(r,objfunc,agregar))
 	{
 		coversGreedyAgregados += 1;
+		return true;
+	}
+
+	// intento algoritmo programacion dinamica
+	if (exact and resolverMochilaDinamica(r,objfunc,agregar))
+	{
+		coversDinamicosAgregados += 1;
 		return true;
 	}
 
