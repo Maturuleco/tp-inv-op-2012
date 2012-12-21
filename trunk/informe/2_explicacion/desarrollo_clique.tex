@@ -49,6 +49,8 @@ Como resolver este nuevo problema es $NP$-hard, se resuelve una relajaci\'on del
 
 Una vez que la partici\'on en cliques está hecha, se busca un cota inferior para $L^r_{x_i=v_i,x_j=v_j}$ eligiendo el v\'ertice m\'as pesado de cada clique sujeto a que $x_i = v_i$ y $x_j = v_j$. Esto se hace para cada combinaci\'on de $v_i,v_j\in \{0,1\}$ teniendo cuidado de ignorar los casos en que haya un eje en el grafo de conflictos con dicha combinaci\'on.\\
 
+Asimismo, puede agregarse que si la primera fase no agrega ejes entonces no hace falta ejecutar la segunda fase.\\
+
 {\footnotesize\underline{Observación:} para más detalles ver el \emph{paper} citado en $[1]$.}
 
 \subsubsection*{Corte Clique}

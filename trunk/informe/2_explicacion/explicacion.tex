@@ -18,8 +18,34 @@ Además de lo comentado anteriormente, hay que aclarar que a la hora de recorrer
 
 La idea intuitiva detrás de estas elecciones es que el recorrido en el árbol de $branching$ se encuentra con nodos de valor \emph{cercano} al óptimo y variables \emph{cercanas} a cumplir las condiciones de integralidad, por lo que el recorrido no tardará \emph{mucho} en encontrar el óptimo tras revisar un conjunto de nodos. Esta visión, de más está decirlo, es extremadamente ingenua y carece de sustento teórico conformante. Simplemente se eligieron esas políticas para que las tres técnicas algorítmicas sigan un recorrido análogo entre ellas, en vez de dejar que el $CPLEX$ tomara decisiones automáticamente. En la práctica este tipo de decisiones se toman luego de un extenso historial empírico que sugiera un favoritismo sobre determinadas estrategias; pero igualmente este enfoque puede ir variando diametralmente entre distintos MIPs.
 
+\newpage
 \subsubsection{Más Comentarios: Implementación}
 
 Se puede ver en el código presentado que se implementó un módulo \verb_Covers_ para el manejo de las desigualdades mochila para buscar cortes cover y un módulo \verb_Grafo_ para el manejo del grafo de conflictos para buscar cortes clique. Además, se implementó un módulo \verb_problemaCPLEX_ que actúa de intermediario entre aquéllos y el $CPLEX$. Esta modularización resultó de gran utilidad porque provee una independencia de implementación entre tres aspectos distintos pero que se relacionan entre sí. Un objeto \verb_problemaCPLEX_ no sólo guarda todo lo necesario para usar el $CPLEX$ (entorno, problema, status, etc), sino que además guarda un objeto \verb_Covers_ y un objeto \verb_Grafo_, de manera que hay una centralización hacia \verb_problemaCPLEX_ pero se garantiza independencia para sus propios métodos a \verb_Covers_ y \verb_Grafo_. Finalmente, en \verb_resolucion.cpp_ se tiene la interfaz entre \verb_problemaCPLEX_ y el usuario del $resolver$.\\
 
-Se decide no ampliar la explicación del código porque son aspectos muy técnicos. El lector interesado puede tratar de comprender el código presentado usando como soporte la introducción a la \emph{CPLEX C Callable Library} expuesta en el  \emph{Apéndice}.
+Se decide no ampliar la explicación del código porque son aspectos muy técnicos. El lector interesado puede tratar de comprender el código presentado usando como soporte la introducción a la \emph{CPLEX C Callable Library} expuesta en el  \emph{Apéndice}.\\
+
+Finalmente, se documenta a continuación la utilización de dos funciones auxiliares a las que se denominan como ``heurísticas prometedoras''. Cada vez que el \emph{Branch \& Cut} resuelva la relajación en un nodo y busque cortes cover y/o clique se utilizarán dos funciones auxiliares con el propósito de no pagar el $overhead$ de buscar cortes si no ``vale la pena''. Es decir, se usan dos funciones para saber si es \emph{probable} encontrar cortes antes de la búsqueda en sí misma (estas heurísticas prometedoras deben tener complejidad menor a los algoritmos de búsqueda para que realmente valga la pena invocarlas previo a la búsqueda).
+
+\subsubsection*{Heurística Prometedora: Cortes Cover}
+
+En el caso de cortes cover, se comentó anteriormente (ver explicación de la función \verb_buscarCover_) que por cada restricción original se busca saber si dicha restricción induce a un corte cover con el óptimo $x^*$ de la relajación. Entonces, antes de resolver el sub-MIP mochila se decide si es probable encontrar un cover con dicha restricción $a_r$ y el valor de $x^*$. La idea es la siguiente:
+
+\begin{enumerate}
+\item Obtener un ``cover de tamaño mínimo'' $C_{min}$ de $a_r$ agregando los $a_{rj}$ tales que $j\in C_{min} \Rightarrow a_{rj} \geq a_{rk} \forall (k \notin C_{min})$.
+\item Calcular $\psi = \overset{n}{\underset{j=1}{\sum}} \tilde{x}^*_j$ (notar que es $\tilde{x}^*_j$ y no $x^*_j$)
+\item Si $\psi \leq |C_{min}| - 1$ no buscar corte en $a_r$.
+\end{enumerate}
+
+La idea es que si $x^*$ no viola el cover mínimo entonces no viola ningún posible cover de $a_r$ y, por lo tanto, no debe buscarse un corte cover con esa restricción. Para hacer más eficiente esta heurística prometedora, los $C_{min}$ de cada $a_r$ se calculan en la \emph{pre-optimización} y en la parte de \emph{optimización} simplemente se realizan los pasos (2) y (3) del algoritmo de esta heurística prometedora.
+
+\subsubsection*{Heurística Prometedora: Cortes Clique}
+
+En el caso de los cortes clique, se comentó anteriormente (ver explicación de la función \verb_buscarClique_) que por cada nodo $x_j$ se intenta buscar una clique que lo contenga y luego ver si la desigualdad clique asociada es violada. Antes de buscar una clique para cada $x_j$ se realiza lo siguiente:
+
+\begin{enumerate}
+\item Calcular $\psi = \tilde{x}^*_j + \overset{}{\underset{k\in V(x_j)}{\sum}} \tilde{x}^*_k$
+\item Si $\psi \leq 1$ no buscar corte con $x_j$.
+\end{enumerate}
+
+O sea, siendo $V(x_j)$ todos los vecinos de $x_j$ en el grafo de conflictos, si el valor en el óptimo de $x_j$ sumado al valor de sus vecinos no suman más que 1, entonces por más que en la clique estén todos los nodos adyacentes a $x_j$, no se encontrará un corte clique con dicho nodo.
