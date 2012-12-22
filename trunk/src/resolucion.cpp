@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 		return 1;
 	}
 
-	problema.setearTiempoMaximo(1800.0); 				/* 3600.0 segs = 1 hr. */
+	problema.setearTiempoMaximo(3600.0); 				/* 3600.0 segs = 1 hr. */
 	if ( levantaExcepcion(problema) ) { return 1; }
 
 	problema.elegirEstrategiaDeSeleccionDeNodo(); 		/* se usa 'best-bound' */

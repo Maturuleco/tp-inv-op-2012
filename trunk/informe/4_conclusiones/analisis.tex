@@ -1,1 +1,7 @@
 \subsection{Conclusiones del Trabajo}
+
+\begin{itemize}
+
+\item La performance del \emph{Branch \& Cut} no es la esperada, a pesar de que en estos algoritmos es donde mayor cantidad de cortes se encuentran para las instancias probadas. Se pudo ver que en ninguno de los casos el agregado de las heurísticas prometedoras hace más lento el algoritmo, aunque su verdadera contribución no parece ser tan alta. Este algoritmo podría modificarse con más restricciones (por ejemplo: no seguir buscando cortes para un mismo nodo del árbol $BC$ tras $X$ cantidad de búsquedas insatisfactorias) o podrían encontrarse nuevas heurísticas más exigentes para la decisión de buscar cortes o no. Asimismo, también puede estar ocurriendo que la cantidad de búsquedas insatisfactorias no sea significativa, sino que simplemente los cortes agregados recorten el espacio de búsqueda de una manera ínfima (no se encuentran facetas, sino restricciones que acotan mínimamente el poliedro de soluciones), con lo cual habría que considerar el agregado de nuevas familias de cortes al algoritmo $BC$. Todas estas variantes se plantean como consideraciones a futuro.
+
+\end{itemize}
