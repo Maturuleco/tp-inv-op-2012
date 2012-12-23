@@ -1,1 +1,15 @@
 \subsection{Discusiones}
+
+Los resultados presentados aquí son fruto de correr las 15 versiones de la implementación presentada con un tiempo máximo de corrida de media hora ($1800$ segundos). Las tablas presentadas se dividen en tres bloques: el $BB$, el $BC$ y el $CB$ y para cada uno se ordenan los resultados según el tiempo que tardaron en encontrar la optimización.\\
+
+En líneas generales no se vio que un algoritmo se destacara por sobre los otros (si bien se podría decretar un empate entre $BB$ y $CB$). Esto se puede deber a que en las instancias que se testearon ya tienen un buen \textit{BB} de por sí. Esto último se ve sobre todo en instacias donde se agregan varios cortes, pero el tiempo de optimización ($TO$) crece linealmente con el tiempo de búsqueda de cortes ($TBC$). Esto se ve bien en la instancia \verb_mod010_ en el bloque de algoritmos de \textit{BC}, en los casos 5 a 8. De esta forma, como las instancias tienen un $BB$ eficiente, agregar cortes no parece beneficiar para encontrar el óptimo. Para consolidar estas conclusiones habría que testear los algoritmos con otros MIPs como trabajo a futuro.\\
+
+Continuando con estas instancias, notamos que en \verb_air03_, \verb_enigma_, \verb_l152lav_, \verb_mod008_  y \verb_nw04_ no se encuentran cortes ni ejes en el grafo de conflictos y el $TO$ en las 15 corridas de cada instancia es similar, salvo que tardan algunas centécimas más por la búsqueda de cortes. Lo que sucede es que hacen el mismo \emph{branching} y no agregan cortes, pero como la búsqueda de cortes se hace igual, el tiempo de optimización aumenta ligeramente.\\
+
+Como garantía de correctitud podemos afirmar que en las instancias en que se agregan cortes, se sigue encontrando el óptimo. Es decir que a pesar de que los resultados no son los esperados, los algoritmos para buscar cortes no afectan el valor del óptimo, por lo que se intuye que no es un problema en la programación de la búsqueda de los cortes. O, al menos, es legítimo plantear la incertidumbre en la naturaleza propia de las instancias.\\
+
+Igualmente, no se puede dar un veredicto en cuanto a qué familia de cortes es la que mejor funciona (por lo menos en nuestra experimentación). En las instancias en que se encontraron cortes, no se notó que algún algoritmo optimizara mejor que otro. En algunas instancias, los cortes $cover$ mejoraban el tiempo de optimización y en otras instancias los cortes $clique$ funcionaban mejor. \\
+
+Por otro lado, se podrían rescatar algunos resultados que son acordes a las intuiciones que se pensaban que ocurrirían. Para las instancias \verb_lseu_, \verb_mitre_ y \verb_p0201_ en los algoritmos de $CB$ más rápidos se ve que al agregar cortes se reducen los $TO$ y además la cantidad de nodos visitados en el árbol de \emph{branching} ($NOD$) es mucho menor, ambos parámetros con respecto al algoritmo $BB$.\\
+
+Finalmente, en algunos resultados se ve que hay fluctuaciones inesperadas (por ejemplo en el caso 15 de \verb_enigma_ o en el caso 1 de \verb_stein27_) en el $TO$, esto probablemente de pueda justificar en algún proceso externo de la computadora sobre la que se corrió la batería de tests.\\
